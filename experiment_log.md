@@ -510,3 +510,15 @@ Diagonal elements (**bold**) represent self-site evaluation (the "floor"). Off-d
 | **INbreast** | Cross-site | 0.5000 [0.5000, 0.5000] | 0.0000 | 0.0000 |
 
 ---
+
+### Run: SMOKE_FEDAVG | Train: `collaborative_4sites` | Seed: `0` (2026-11-01 01:03)
+
+
+| Eval Site | Role | Test AUC (95% CI) | Sens @ 90% Spec | Patient AUC |
+|---|---|:---:|:---:|:---:|
+| **CMMD** | Cross-site | 1.0000 [1.0000, 1.0000] | 0.0000 | 1.0000 |
+| **CBIS** | Cross-site | 0.2500 [0.2500, 0.2500] | 0.0000 | 0.0000 |
+| **BCDR** | Cross-site | 0.5000 [0.5000, 0.5000] | 0.5000 | 1.0000 |
+| **INbreast** | Cross-site | 0.5000 [0.5000, 0.5000] | 0.0000 | 0.0000 |
+
+---
