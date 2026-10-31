@@ -1,0 +1,83 @@
+# ─────────────────────────────────────────────────
+#  fl-mammo experiment config
+#  One file drives local / centralized / federated
+# ─────────────────────────────────────────────────
+
+# ─── Data ────────────────────────────────────────
+data_root: data
+sites: [CMMD, CBIS, BCDR, INbreast]
+labels_file: labels_split.csv          # per-site, has 'split' column
+image_col: proc_path                   # processed 512px PNGs
+label_col: label
+patient_col: patient_id
+split_col: split
+img_size: 224                          # resize to 224×224
+cache_images: true                     # in-memory caching of pre-resized images
+prefetch_factor: 2
+
+# ─── Model ───────────────────────────────────────
+model: resnet18
+pretrained: true                       # ImageNet init
+freeze_bn: true                        # keep BN running stats from ImageNet
+num_classes: 1                         # binary → BCEWithLogitsLoss
+
+# ─── Training (shared across all methods) ────────
+optimizer: adam
+lr: 3.0e-4                             # slightly higher LR (warmup handles initial instability)
+weight_decay: 1.0e-4
+batch_size: 32
+max_epochs: 50                         # more training time for small datasets to converge
+patience: 12                           # more tolerant early stopping (val AUC is noisy on small sets)
+warmup_epochs: 5                       # linear LR warmup before cosine annealing
+max_grad_norm: 1.0                     # gradient clipping for stability
+num_workers: 4
+
+# ─── Thermal Management & Cooldown ──────────────
+thermal:
+  enabled: true
+  temp_threshold: 72                       # Emergency pause if GPU >= 72°C
+  hot_cooldown_sec: 15                     # Pause 15s if hot
+  cooldown_interval_epochs: 10             # Cooldown after every 10 epochs
+  interval_cooldown_sec: 10                # Pause for 10 seconds
+  epoch_cooldown_sec: 0                    # Optional per-epoch pause (0 = disabled)
+
+# ─── Augmentation ────────────────────────────────
+# NOTE: RandomResizedCrop is applied programmatically in dataset.py for train
+# (scale 0.8–1.0), plus RandomErasing at the end. The augmentations below
+# are applied between RandomResizedCrop and ToTensor.
+augmentation:
+  train:
+    - RandomHorizontalFlip
+    - RandomVerticalFlip
+    - RandomRotation:
+        degrees: 15
+    - RandomAffine:
+        degrees: 0
+        translate: [0.08, 0.08]
+        scale: [0.95, 1.05]
+    - ColorJitter:
+        brightness: 0.15
+        contrast: 0.15
+    - GaussianBlur:
+        kernel_size: 3
+        sigma: [0.1, 1.0]
+  eval: []                             # deterministic at test time
+
+# ─── Federated (sample-weighted FedAvg, frozen BN) ─
+fed:
+  rounds: 35                           # 35 communication rounds (~70 local epochs per client)
+  local_epochs: 2                      # 2 local epochs per client per round
+  patience: 10                         # early stopping if avg_val_auc doesn't improve for 10 rounds
+  weighting: sample                    # avg ∝ site sample count
+  lr: 1.0e-4                           # constant stable federated LR (prevents optimizer restart peak jerk)
+  constant_lr: true
+
+# ─── Evaluation ──────────────────────────────────
+eval:
+  metrics: [auc, sensitivity_at_spec_90]
+  threshold_on: val                    # decision threshold from val only
+  bootstrap_patients: 1000             # patient-level bootstrap iterations
+  seeds: [0, 1, 2]                     # 3 independent repeats (seeds 0, 1, 2)
+
+# ─── Output ──────────────────────────────────────
+results_root: results

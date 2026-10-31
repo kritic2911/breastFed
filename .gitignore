@@ -1,0 +1,33 @@
+# Data & labels (Rule 4: strictly no patient images or labels in git)
+data/
+*.dcm
+*.dicom
+*.png
+*.jpg
+*.jpeg
+synthetic_data/
+
+# Experiment results & runs
+results/
+run/
+runs/
+
+# Python & virtual environment
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Caches & tooling
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Misc & temporary
+misc/
+*.tmp
+*.log
