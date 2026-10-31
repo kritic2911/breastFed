@@ -17,17 +17,22 @@ import math
 import time
 from pathlib import Path
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import torch
 
-from src.model import build_model, model_size_bytes, get_bn_keys, get_trainable_params
-from src.train import train_local_epochs, set_seed
 from src.dataset import build_site_loader
-from src.evaluate import predict, compute_metrics, evaluate_on_site
+from src.evaluate import compute_metrics, evaluate_on_site, predict
+from src.model import build_model, get_bn_keys, get_trainable_params, model_size_bytes
+from src.provenance import (
+    StructuredLogger,
+    generate_run_id,
+    get_environment_info,
+    save_resolved_config,
+)
 from src.storage import save_run_artifacts
 from src.thermal import gpu_thermal_cooldown
-
+from src.train import set_seed, train_local_epochs
 
 # ────────────────────────────────────────────────────────────────
 #  FedAvg core
@@ -87,19 +92,24 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
     weighting = cfg["fed"]["weighting"]
     effective_method = method_name or f"federated_{weighting}"
 
-    out = Path(output_dir) if output_dir else None
-    if out:
-        out.mkdir(parents=True, exist_ok=True)
-        best_pt_path = out / "best.pt"
-        metrics_json_path = out / "metrics.json"
+    run_id, config_hash, git_sha = generate_run_id(cfg)
+    out = Path(output_dir) if output_dir else Path(cfg.get("results_root", "results")) / run_id
+    out.mkdir(parents=True, exist_ok=True)
+    save_resolved_config(cfg, out)
 
-        if not force_train and not force_eval and metrics_json_path.exists():
-            print(f"  [Skipping] Federated already completed at {output_dir}. Use --force-eval to re-evaluate or --force to retrain.")
-            try:
-                with open(metrics_json_path) as f:
-                    return json.load(f)
-            except Exception:
-                pass
+    logger = StructuredLogger(out / "logs.jsonl", run_id=run_id)
+    logger.log(event="run_start", metric="rounds", value=n_rounds)
+
+    _best_pt_path = out / "best.pt"
+    metrics_json_path = out / "metrics.json"
+
+    if not force_train and not force_eval and metrics_json_path.exists():
+        print(f"  [Skipping] Federated already completed at {out}. Use --force-eval to re-evaluate or --force to retrain.")
+        try:
+            with open(metrics_json_path) as f:
+                return json.load(f)
+        except Exception:
+            pass
 
     # ── Build per-site loaders ──
     site_train_loaders = {}
@@ -176,7 +186,7 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
         history = []
         best_avg_val_auc = -1.0
         best_round = 0
-        best_global_state = None
+        best_global_state = copy.deepcopy(global_state)
         total_bytes_sent = 0
         total_train_steps = 0
         start_round = 1
@@ -274,7 +284,8 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
             avg_val_auc = float(np.mean(list(round_val_aucs.values())))
             elapsed = time.time() - t0
 
-            if avg_val_auc > best_avg_val_auc:
+            is_better = not np.isnan(avg_val_auc) and (avg_val_auc > best_avg_val_auc or best_round == 0)
+            if is_better:
                 best_avg_val_auc = avg_val_auc
                 best_round = rnd
                 best_global_state = copy.deepcopy(global_state)
@@ -307,6 +318,15 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
                 record[f"{s}_prob_std"] = round_val_stds.get(s, np.nan)
 
             history.append(record)
+            if logger:
+                for s in sites:
+                    logger.log(event="round_loss", round=rnd, site=s, split="train", metric="loss", value=client_losses.get(s))
+                    logger.log(event="round_val", round=rnd, site=s, split="val", metric="auc", value=round_val_aucs.get(s))
+                    logger.log(event="round_val", round=rnd, site=s, split="val", metric="prob_std", value=round_val_stds.get(s))
+                    logger.log(event="round_val", round=rnd, site=s, split="val", metric="prob_mean", value=round_val_means.get(s))
+                logger.log(event="round_summary", round=rnd, site="global", split="val", metric="avg_val_auc", value=avg_val_auc)
+                logger.log(event="round_summary", round=rnd, site="global", metric="time_sec", value=elapsed)
+
             if out:
                 pd.DataFrame(history).to_csv(out / "training_history.csv", index=False)
                 round_ckpt = {
@@ -325,9 +345,9 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
                 torch.save(round_ckpt, out / "last_round.pt")
 
             print(f"  Round {rnd:2d}/{n_rounds:2d} | avg_val_auc {avg_val_auc:.4f} (best {best_avg_val_auc:.4f} r{best_round}) | lr {current_round_lr:.1e} | {elapsed:.1f}s")
-            print(f"    Loss:      " + " | ".join(f"{s}={client_losses.get(s, 0.0):.4f}" for s in sites))
-            print(f"    Val AUC:   " + " | ".join(f"{s}={round_val_aucs[s]:.4f}" for s in sites))
-            print(f"    Prob Std:  " + " | ".join(f"{s}={round_val_stds[s]:.4f}" for s in sites), flush=True)
+            print("    Loss:      " + " | ".join(f"{s}={client_losses.get(s, 0.0):.4f}" for s in sites))
+            print("    Val AUC:   " + " | ".join(f"{s}={round_val_aucs[s]:.4f}" for s in sites))
+            print("    Prob Std:  " + " | ".join(f"{s}={round_val_stds[s]:.4f}" for s in sites), flush=True)
 
             if patience and rounds_no_improve >= patience:
                 print(f"  [Early Stopping] Federated training stopped early at round {rnd} "
@@ -392,6 +412,11 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
         cross_results=test_results,
         results_root=cfg.get("results_root", "results"),
         output_dir=out,
+        cfg=cfg,
+        run_id=run_id,
+        config_hash=config_hash,
+        git_sha=git_sha,
+        logger=logger,
         extra_meta={
             "weighting": weighting,
             "best_round": best_round,
@@ -403,9 +428,13 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
     )
 
     results = {
+        "run_id": run_id,
+        "config_hash": config_hash,
+        "git_sha": git_sha,
+        "seed": seed,
+        "environment": get_environment_info(),
         "method": effective_method,
         "weighting": weighting,
-        "seed": seed,
         "best_round": best_round,
         "best_avg_val_auc": float(best_avg_val_auc),
         "total_rounds": n_rounds,

@@ -7,25 +7,25 @@
 4. Eval path check: Compare training-time predict() AUC vs results-CSV evaluate_on_site() AUC.
 """
 
-import copy
 import json
-from pathlib import Path
 import re
 import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score
 import torch
 import torch.nn as nn
-from torch.optim import Adam
 import yaml
+from sklearn.metrics import roc_auc_score
+from torch.optim import Adam
 
 # Ensure project root is in sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from src.dataset import build_site_loader
+from src.evaluate import compute_metrics, evaluate_on_site, predict
 from src.model import build_model, get_trainable_params
-from src.dataset import build_site_loader, MammoDataset, build_loader
-from src.evaluate import predict, compute_metrics, evaluate_on_site
 
 
 def run_shuffled_label_control(cfg, device="cuda"):
@@ -172,7 +172,7 @@ def run_eyeball_20_previews():
         ]
         gt_path = match["pathology"].str.strip().str.upper().tolist() if len(match) > 0 else ["NOT_FOUND"]
         abn_type = match["abnormality type"].tolist() if "abnormality type" in match else []
-        calc_type = match["calc type"].tolist() if "calc type" in match else []
+        _calc_type = match["calc type"].tolist() if "calc type" in match else []
         subtlety = match["subtlety"].tolist() if "subtlety" in match else []
 
         status = "MATCH" if (assigned_lbl == 1 and any("MALIGNANT" in p for p in gt_path)) or (assigned_lbl == 0 and not any("MALIGNANT" in p for p in gt_path)) else "MISMATCH"
@@ -232,7 +232,7 @@ def run_eval_path_verification(cfg, device="cuda"):
     print(f"  Saved metrics.json AUC:           {auc_saved:.6f}")
     print(f"  Difference (Train vs CSV):        {diff_train_site:.1e}")
     print(f"  Difference (CSV vs Saved JSON):   {diff_site_saved:.1e}")
-    print(f"  Arrays identical:")
+    print("  Arrays identical:")
     print(f"    - Probabilities: {np.allclose(p_train, res_site['predictions']['probs'])}")
     print(f"    - Labels:        {np.array_equal(y_train, res_site['predictions']['labels'])}")
     print(f"    - Patient IDs:   {np.array_equal(pids_train, res_site['predictions']['patient_ids'])}")

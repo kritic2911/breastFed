@@ -25,9 +25,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-
 from common import make_proc, make_raw
+from tqdm import tqdm
 
 IMG_EXT = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp"}
 

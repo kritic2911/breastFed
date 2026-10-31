@@ -19,15 +19,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 import pandas as pd
-import yaml
 import torch
 import torch.nn as nn
-from torch.optim import Adam
+import yaml
 from sklearn.metrics import roc_auc_score
+from torch.optim import Adam
 
-from src.dataset import MammoDataset, build_site_loader
-from src.model import build_model, get_trainable_params, freeze_batchnorm
-from src.evaluate import predict, compute_metrics
+from src.dataset import MammoDataset
+from src.model import build_model, freeze_batchnorm, get_trainable_params
 
 
 def run_overfit_32_test(cfg, site="CBIS", device="cuda" if torch.cuda.is_available() else "cpu",
@@ -116,7 +115,7 @@ def run_overfit_32_test(cfg, site="CBIS", device="cuda" if torch.cuda.is_availab
     final_std = history[-1]["prob_std"]
 
     if final_auc >= 0.99 and final_loss < 0.05:
-        print(f"VERDICT: PASSED! Model completely memorized the 32-image batch.")
+        print("VERDICT: PASSED! Model completely memorized the 32-image batch.")
         print(f"  Final Loss: {final_loss:.6f} | Final Train AUC: {final_auc:.4f} | Final Acc: {final_acc*100:.1f}% | Final Prob Std: {final_std:.4f}")
         print("  Gradients flow cleanly through all ResNet layers; no vanishing/exploding gradients.")
     else:

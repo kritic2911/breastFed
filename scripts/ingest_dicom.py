@@ -20,9 +20,8 @@ import cv2
 import numpy as np
 import pandas as pd
 import pydicom
-from tqdm import tqdm
-
 from common import make_proc, make_raw
+from tqdm import tqdm
 
 
 def load_pixels(ds):
@@ -162,7 +161,7 @@ def main():
 
     # 1. Load existing metadata and mapping if available
     existing_df = None
-    processed_sop = set()
+    _processed_sop = set()
     processed_src_paths = set()
     processed_src_resolved = set()
     orig_to_mapped = {}
@@ -171,7 +170,7 @@ def main():
     if meta_path.exists():
         existing_df = pd.read_csv(meta_path, dtype=str).fillna("")
         if "sop_uid" in existing_df.columns:
-            processed_sop = set(existing_df["sop_uid"].dropna())
+            _processed_sop = set(existing_df["sop_uid"].dropna())
             for sop in existing_df["sop_uid"].dropna():
                 m = re.match(r"^(.*)_(\d+)$", str(sop).strip())
                 if m:

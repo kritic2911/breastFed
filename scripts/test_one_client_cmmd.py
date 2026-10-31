@@ -8,8 +8,9 @@ and reaches expected AUC (~0.71-0.74).
 import copy
 import sys
 from pathlib import Path
-import yaml
+
 import torch
+import yaml
 
 # Ensure project root is in sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -55,7 +56,7 @@ def main():
     print("ONE-CLIENT TEST RESULTS (CMMD):")
     print(f"  Image-level AUC:   {auc:.4f} [95% CI: {ci['lower']:.4f}, {ci['upper']:.4f}]")
     print(f"  Patient-level AUC: {pat_auc:.4f}")
-    print(f"  Local CMMD target: ~0.71 - 0.74")
+    print("  Local CMMD target: ~0.71 - 0.74")
     if auc >= 0.68:
         print("  -> PASSED: One-client FedAvg matches local CMMD performance!")
     else:

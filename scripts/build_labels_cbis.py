@@ -13,8 +13,9 @@ Pathology mapping:
 If an image has multiple abnormalities, MALIGNANT (1) takes precedence.
 """
 import argparse
-from pathlib import Path
 import re
+from pathlib import Path
+
 import pandas as pd
 
 

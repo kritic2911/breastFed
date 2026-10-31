@@ -3,8 +3,16 @@
 import json
 from datetime import datetime
 from pathlib import Path
+
 import pandas as pd
 import torch
+
+from src.provenance import (
+    StructuredLogger,
+    generate_run_id,
+    get_environment_info,
+    save_resolved_config,
+)
 
 
 def save_run_artifacts(
@@ -19,38 +27,85 @@ def save_run_artifacts(
     results_root: str = "results",
     extra_meta: dict = None,
     output_dir: Path = None,
+    cfg: dict = None,
+    run_id: str = None,
+    config_hash: str = None,
+    git_sha: str = None,
+    logger: StructuredLogger = None,
 ) -> Path:
     """Save all artifacts for a run:
+    - resolved_config.yaml: resolved config dict
+    - metrics.json: full metrics dictionary including provenance & environment
+    - logs.jsonl: structured event logs
+    - preds.csv: consolidated per-image predictions across test sets
     - best.pt: model checkpoint weights
-    - metrics.json: full metrics dictionary
     - training_history.csv: per-epoch loss, val AUC, sensitivity, VRAM, timing
-    - predictions_{eval_site}.csv: per-sample test predictions
     - results/all_runs_summary.csv: appends standardized metrics for aggregate analysis
     - experiment_log.md: appends markdown summary
     """
     root = Path(results_root)
     root.mkdir(parents=True, exist_ok=True)
+
+    # 1. Resolve provenance metadata
+    if cfg is not None and (run_id is None or config_hash is None or git_sha is None):
+        gen_id, gen_hash, gen_sha = generate_run_id(cfg)
+        run_id = run_id or gen_id
+        config_hash = config_hash or gen_hash
+        git_sha = git_sha or gen_sha
+    else:
+        run_id = run_id or f"{datetime.now().strftime('%Y%m%d_%H%M%S')}-default-unknown"
+        config_hash = config_hash or "unknown"
+        git_sha = git_sha or "unknown"
+
+    env_info = get_environment_info()
+
     if output_dir is not None:
         out_dir = Path(output_dir)
     else:
         out_dir = root / method / train_site / f"seed_{seed}"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. Model checkpoint
+    # 2. Save resolved config
+    if cfg is not None:
+        save_resolved_config(cfg, out_dir)
+
+    # 3. Model checkpoint
     if best_state is not None:
         torch.save(best_state, out_dir / "best.pt")
 
-    # 2. Per-epoch training history CSV
+    # 4. Per-epoch training history CSV
     if history:
         df_hist = pd.DataFrame(history)
         df_hist.to_csv(out_dir / "training_history.csv", index=False)
 
-    # 3. Save test predictions CSVs per evaluation site
+    # 5. Save test predictions and consolidated preds.csv
+    consolidated_preds = []
     for eval_site, res in cross_results.items():
         if "predictions" in res and res["predictions"]:
-            df_preds = pd.DataFrame(res["predictions"])
+            preds_dict = res["predictions"]
+            df_preds = pd.DataFrame(preds_dict)
             df_preds.to_csv(out_dir / f"predictions_{eval_site}.csv", index=False)
-        # Also save standalone site metric file
+
+            pids = preds_dict.get("patient_ids", [])
+            lbls = preds_dict.get("labels", [])
+            probs = preds_dict.get("probs", [])
+            binary_preds = preds_dict.get("preds", [])
+            image_ids = preds_dict.get("image_ids", [f"{pids[i]}_{i}" for i in range(len(pids))])
+
+            for i in range(len(pids)):
+                consolidated_preds.append({
+                    "run_id": run_id,
+                    "site": eval_site,
+                    "split": "test",
+                    "patient_id": pids[i],
+                    "image_id": image_ids[i] if i < len(image_ids) else f"{pids[i]}_{i}",
+                    "label": lbls[i] if i < len(lbls) else None,
+                    "prob": probs[i] if i < len(probs) else None,
+                    "pred": binary_preds[i] if i < len(binary_preds) else None,
+                    "threshold": float(threshold),
+                })
+
+        # Save standalone site metric file
         site_metrics_payload = {
             "eval_site": eval_site,
             "threshold": float(threshold),
@@ -59,7 +114,17 @@ def save_run_artifacts(
         with open(out_dir / f"metrics_{eval_site}.json", "w") as sf:
             json.dump(site_metrics_payload, sf, indent=2, default=str)
 
-    # 4. Save metrics.json (merging cross_site_test if already exists)
+    # Save consolidated preds.csv
+    if consolidated_preds:
+        df_cons = pd.DataFrame(consolidated_preds)
+        df_cons.to_csv(out_dir / "preds.csv", index=False)
+    else:
+        # Create empty placeholder if no predictions
+        pd.DataFrame(columns=[
+            "run_id", "site", "split", "patient_id", "image_id", "label", "prob", "pred", "threshold"
+        ]).to_csv(out_dir / "preds.csv", index=False)
+
+    # 6. Save metrics.json (merging cross_site_test if already exists)
     merged_cross = dict(cross_results)
     if (out_dir / "metrics.json").exists():
         try:
@@ -73,10 +138,14 @@ def save_run_artifacts(
             pass
 
     results_payload = {
+        "run_id": run_id,
+        "config_hash": config_hash,
+        "git_sha": git_sha,
+        "seed": seed,
         "timestamp": datetime.now().isoformat(),
+        "environment": env_info,
         "method": method,
         "trained_on": train_site,
-        "seed": seed,
         "threshold": float(threshold),
         "own_site_test": own_results,
         "cross_site_test": merged_cross,
@@ -88,7 +157,17 @@ def save_run_artifacts(
     with open(out_dir / "metrics.json", "w") as f:
         json.dump(results_payload, f, indent=2, default=str)
 
-    # 5. Append to central all_runs_summary.csv
+    # 7. Structured logger completion record
+    if logger is None:
+        logger = StructuredLogger(out_dir / "logs.jsonl", run_id=run_id)
+
+    logger.log(event="run_completed", metric="threshold", value=float(threshold))
+    for eval_site, res in cross_results.items():
+        auc_val = res.get("image_level", {}).get("auc")
+        if auc_val is not None:
+            logger.log(event="test_evaluation", site=eval_site, split="test", metric="auc", value=float(auc_val))
+
+    # 8. Append to central all_runs_summary.csv
     summary_csv_path = root / "all_runs_summary.csv"
     summary_rows = []
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -106,6 +185,7 @@ def save_run_artifacts(
         ci = res.get("bootstrap_auc_ci", {})
         summary_rows.append({
             "timestamp": ts,
+            "run_id": run_id,
             "method": method,
             "train_site": train_site,
             "eval_site": eval_site,
@@ -129,7 +209,7 @@ def save_run_artifacts(
     else:
         df_new.to_csv(summary_csv_path, mode="w", header=True, index=False)
 
-    # 6. Append to experiment_log.md
+    # 9. Append to experiment_log.md
     log_file = Path("experiment_log.md")
     if log_file.exists():
         append_to_experiment_log(log_file, method, train_site, seed, cross_results, best_epoch, best_val_auc)

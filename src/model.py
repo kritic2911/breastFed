@@ -1,6 +1,5 @@
 """Model factory — ResNet18 with frozen BN for cross-scanner robustness."""
 
-import torch
 import torch.nn as nn
 from torchvision import models
 

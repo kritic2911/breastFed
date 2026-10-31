@@ -1,11 +1,9 @@
 """Evaluation: AUC, sensitivity@specificity, patient-level bootstrap CIs."""
 
 import numpy as np
-from sklearn.metrics import roc_auc_score, roc_curve
-
 import torch
 import torch.nn as nn
-
+from sklearn.metrics import roc_auc_score, roc_curve
 
 # ────────────────────────────────────────────────────────────────
 #  Inference

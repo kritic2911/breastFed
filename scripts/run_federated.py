@@ -11,9 +11,9 @@ from pathlib import Path
 # Ensure project root is in python path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import yaml
 import torch
-import pandas as pd
+import yaml
+
 from src.federated import run_federated
 
 

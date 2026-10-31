@@ -25,14 +25,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 import pandas as pd
-import yaml
 import torch
+import yaml
 
-from src.dataset import build_site_loader, build_pooled_loader
-from src.model import build_model
-from src.train import train_model, set_seed
-from src.evaluate import evaluate_on_site, predict, compute_metrics
+from src.dataset import build_pooled_loader, build_site_loader
+from src.evaluate import compute_metrics, evaluate_on_site, predict
 from src.federated import run_federated
+from src.model import build_model
+from src.train import set_seed, train_model
 
 
 def run_centralized_loso(cfg, held_out, seed, device, results_root,

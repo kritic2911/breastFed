@@ -1,20 +1,18 @@
 """Training loop with early stopping on validation AUC."""
 
 import copy
-import math
 import time
 
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.optim import Adam
-from torch.optim.lr_scheduler import CosineAnnealingLR, SequentialLR, LinearLR
+from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 
-from src.model import get_trainable_params, freeze_batchnorm
-from src.evaluate import predict, compute_metrics
-from src.thermal import gpu_thermal_cooldown
 from src.dataset import compute_pos_weight
-
+from src.evaluate import compute_metrics, predict
+from src.model import freeze_batchnorm, get_trainable_params
+from src.thermal import gpu_thermal_cooldown
 
 # ────────────────────────────────────────────────────────────────
 #  Training loop
