@@ -36,6 +36,31 @@ def freeze_batchnorm(model: nn.Module):
                 param.requires_grad = False
 
 
+def verify_bn_state(model: nn.Module, verbose: bool = True) -> dict:
+    """Inspect and report BatchNorm layers: training status and requires_grad."""
+    bn_modules = []
+    for name, module in model.named_modules():
+        if isinstance(module, (nn.BatchNorm2d, nn.BatchNorm1d)):
+            requires_grad_flags = [p.requires_grad for p in module.parameters()]
+            bn_modules.append({
+                "name": name,
+                "is_training": module.training,
+                "requires_grad": any(requires_grad_flags) if requires_grad_flags else False,
+            })
+    all_eval = all(not m["is_training"] for m in bn_modules)
+    none_grad = all(not m["requires_grad"] for m in bn_modules)
+    status = {
+        "num_bn_layers": len(bn_modules),
+        "all_in_eval_mode": all_eval,
+        "all_requires_grad_false": none_grad,
+    }
+    if verbose:
+        eval_str = "EVAL (frozen)" if all_eval else "TRAIN (warning: unfrozen)"
+        grad_str = "False (frozen)" if none_grad else "True (warning: unfrozen)"
+        print(f"  [BatchNorm Check] {len(bn_modules)} BN layers | mode: {eval_str} | requires_grad: {grad_str}")
+    return status
+
+
 def get_trainable_params(model: nn.Module):
     """Return only parameters that require grad (excludes frozen BN)."""
     return [p for p in model.parameters() if p.requires_grad]

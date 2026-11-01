@@ -12,12 +12,15 @@ Tests cover:
 import copy
 import json
 
+import numpy as np
 import pytest
 import torch
 import yaml
 
+from src.calibration import TemperatureScaler, compute_ece
 from src.federated import fedavg_aggregate
-from src.model import build_model, get_bn_keys
+from src.ledger import aggregate_ledger, append_to_ledger
+from src.model import build_model, get_bn_keys, verify_bn_state
 from src.provenance import (
     StructuredLogger,
     compute_config_hash,
@@ -225,3 +228,78 @@ def test_provenance_and_run_id_generation(tmp_path):
     for record in lines:
         assert set(record.keys()) == required_schema
         assert record["run_id"] == run_id
+
+
+# ────────────────────────────────────────────────────────────────
+# 7. BatchNorm State Inspection
+# ────────────────────────────────────────────────────────────────
+
+def test_bn_state_verification():
+    """Verify that verify_bn_state detects frozen eval mode and requires_grad=False."""
+    cfg = {"model": "resnet18", "pretrained": False, "num_classes": 1, "freeze_bn": True}
+    model = build_model(cfg, device="cpu")
+    status = verify_bn_state(model, verbose=False)
+
+    assert status["num_bn_layers"] > 0
+    assert status["all_in_eval_mode"] is True
+    assert status["all_requires_grad_false"] is True
+
+
+# ────────────────────────────────────────────────────────────────
+# 8. Experiment Ledger & Seed Statistics
+# ────────────────────────────────────────────────────────────────
+
+def test_ledger_append_and_seed_statistics(tmp_path):
+    """Verify append_to_ledger and student-t 95% CI calculation over seeds."""
+    ledger_file = tmp_path / "ledger.csv"
+    seeds = [42, 53, 64]
+    aucs = [0.72, 0.74, 0.73]
+
+    for s, a in zip(seeds, aucs):
+        append_to_ledger(
+            run_id=f"run_seed_{s}",
+            method="federated",
+            site="CMMD",
+            seed=s,
+            metric="auc",
+            value=a,
+            ledger_path=ledger_file,
+        )
+
+    assert ledger_file.exists()
+    df_agg = aggregate_ledger(ledger_path=ledger_file, metric="auc")
+    assert len(df_agg) == 1
+    row = df_agg.iloc[0]
+    assert row["mean"] == pytest.approx(0.73, abs=1e-4)
+    assert row["n_seeds"] == 3
+    assert row["ci_low"] < row["mean"] < row["ci_high"]
+
+
+# ────────────────────────────────────────────────────────────────
+# 9. Calibration & Temperature Scaling
+# ────────────────────────────────────────────────────────────────
+
+def test_ece_and_temperature_scaling():
+    """Verify ECE computation and temperature scaling convergence."""
+    # Synthetic uncalibrated overconfident predictions
+    np.random.seed(42)
+    labels = np.array([0] * 50 + [1] * 50)
+    logits = np.concatenate([
+        np.random.normal(loc=-2.0, scale=1.0, size=50),
+        np.random.normal(loc=2.0, scale=1.0, size=50),
+    ])
+    raw_probs = 1.0 / (1.0 + np.exp(-logits))
+
+    ece_res = compute_ece(raw_probs, labels, n_bins=5)
+    assert 0.0 <= ece_res["ece"] <= 1.0
+    assert len(ece_res["bins"]) == 5
+
+    # Fit temperature scaler
+    scaler = TemperatureScaler()
+    t = scaler.fit(logits, labels)
+    assert 0.05 < t < 10.0
+
+    cal_probs = scaler.calibrate(logits)
+    cal_ece = compute_ece(cal_probs, labels, n_bins=5)
+    assert 0.0 <= cal_ece["ece"] <= 1.0
+

@@ -18,7 +18,7 @@ This plan takes FL-Mammo from a shaky baseline to a federated breast-cancer dete
 2. Never tune on the test set. Thresholds and epochs come from validation; each final config touches test once.
 3. Every run writes: resolved config, config hash, git SHA, seed, environment, `logs.jsonl`, `metrics.json`, `preds.csv`.
 4. No patient images or labels in git, Docker images or CI. CI uses synthetic data only. Check each dataset's licence before putting it anywhere beyond your laptop.
-5. Three seeds minimum (0, 1, 2). Claim an improvement only when the 95% CI of the paired difference excludes zero. Report negative results.
+5. Three seeds minimum (42, 53, 64). Claim an improvement only when the 95% CI of the paired difference excludes zero. Report negative results.
 6. If a gate fails twice, stop and report: what failed, the evidence, two hypotheses, the cheapest test for each.
 7. Label honestly: INbreast labels come from BI-RADS (radiologist assessment), CMMD and CBIS from pathology. Never call a BI-RADS-derived output a diagnosis.
 8. Scope is frozen. Anything not in the Must list in section 7 goes to Part B, however interesting.
@@ -48,7 +48,7 @@ Your federated pipeline is now sound (aggregation test, BN exclusion, constant L
 | --- | --- | --- | --- |
 | Federated regression between runs | All 16 federated rows dropped (mean about 0.15 AUC) from Oct 22 to Oct 23 | LR spikes and BN bookkeeping fixed; rerun all federated | 1 |
 | Local and centralized used the old LR schedule | Peak LR about 3e-4 vs config 1e-4 | Rerun at constant 1e-4 so comparisons are fair | 1 |
-| One seed only | All rows seed 42; same-config reruns differed by 0.10 on average | Seeds 0, 1, 2 for every config | 1 |
+| One seed only | All rows seed 42; same-config reruns differed by 0.10 on average | Seeds 42, 53, 64 for every config | 1 |
 | Tiny val and test sets | CI half-width: CMMD ±0.05, CBIS ±0.10, INbreast ±0.16, BCDR ±0.18 | Fixed epoch counts for small sites; report CIs; no claims inside overlap | 1 |
 | Pooled val AUC is inflated | Sites differ in malignant prevalence, so the model can score "which site" | Log val AUC per site | 1 |
 | Per-client loss 1.0 to 1.3 on BCDR, INbreast, CBIS | Worse than a constant prediction (about 0.69) | Compare mean predicted probability to site prevalence; per-site calibration | 1, 3 |
@@ -81,8 +81,8 @@ Your federated pipeline is now sound (aggregation test, BN exclusion, constant L
 **Agent does**
 
 1. Add per-site val AUC, mean predicted probability, probability std, and per-client loss to every round log. Print BN `requires_grad` and train/eval state once per run.
-2. Resolution test: local CBIS at 224 and 384 px (512 px is too slow for a 20-day plan), seeds 0 to 2. Keep the larger size only if the AUC gain is outside the CI; otherwise stay at 224 and say so in the paper.
-3. Rerun the full matrix at constant LR 1e-4: local (4 sites, with cross-site eval), centralized (pooled and site-balanced), federated sample-weighted. Seeds 0 to 2.
+2. Resolution test: local CBIS at 224 and 384 px (512 px is too slow for a 20-day plan), seeds 42, 53, 64. Keep the larger size only if the AUC gain is outside the CI; otherwise stay at 224 and say so in the paper.
+3. Rerun the full matrix at constant LR 1e-4: local (4 sites, with cross-site eval), centralized (pooled and site-balanced), federated sample-weighted. Seeds 42, 53, 64.
 4. Small sites (BCDR, INbreast): fixed epoch count or merged train+val with cross-validation; no early stopping on a validation set of about 50 images.
 5. Aggregation script: mean and 95% CI over seeds, plus patient-level bootstrap CIs per run, saved to the ledger.
 6. Calibration: reliability curve and ECE per site; per-site temperature scaling fitted on val.
@@ -95,7 +95,7 @@ Your federated pipeline is now sound (aggregation test, BN exclusion, constant L
 
 **Gate**
 
-- A table of 3 methods × 4 sites, mean ± CI over three seeds.
+- A table of 3 methods × 4 sites, mean ± CI over three seeds (42, 53, 64).
 - CMMD AUC at least about 0.70 in every method.
 - Rerunning the same seed reproduces test AUC within 0.03.
 - No site with a CI entirely below 0.5. If one appears, repeat the flip test and preview check before continuing.
@@ -218,7 +218,7 @@ Container work runs beside the GPU phases. The dashed line marks presentation da
 
 **Cut lines**
 
-- **Must:** Phases 0, 1, 2 (A1 to A3), 4 and 5 (TLS, timeouts, checkpoint resume), the section 8 ledger and report, and a minimal CI (half a day: GitHub Actions running `ruff`, `pytest` and `make smoke` on synthetic data).
+- **Must:** Phases 42, 53, 64 (A1 to A3), 4 and 5 (TLS, timeouts, checkpoint resume), the section 8 ledger and report, and a minimal CI (half a day: GitHub Actions running `ruff`, `pytest` and `make smoke` on synthetic data).
 - **Should:** Phase 3 explainability (calibration, Grad-CAM, reports); ablation A4.
 - **Moved to Part B:** monitoring, full CI/CD, cloud, secure aggregation, differential privacy, attacks, consensus, your own gRPC layer.
 - **If you fall behind, cut in this order:** A4, the mask-overlap analysis, the failure gallery, the slow-client fault test. Never cut the three-seed comparison.
@@ -292,7 +292,7 @@ Abstract; Introduction with a contribution list; Related work (FL for mammograph
 
 Record the demo as a backup video, and rehearse it with the network off.
 
-**You study:** Pineau's reproducibility checklist; "Ten simple rules for reproducible computational research"; MLflow tracking; LaTeX or Typst; Keshav's "How to read a paper" (use it on each paper in section 13).
+**You study:** Pineau's reproducibility checklist; "Ten simple rules for reproducible computational research"; MLflow tracking; LaTeX or Typst; Keshav's "How to read a paper" (use it on each paper in section 9).
 
 **Gate (end of project):** `make paper` on a clean clone regenerates every table and figure from the ledger, and the claims-to-evidence table has no blanks.
 

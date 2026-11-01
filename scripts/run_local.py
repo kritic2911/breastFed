@@ -18,7 +18,7 @@ import yaml
 
 from src.dataset import build_site_loader
 from src.evaluate import compute_metrics, evaluate_on_site, predict
-from src.model import build_model
+from src.model import build_model, verify_bn_state
 from src.storage import save_run_artifacts
 from src.train import set_seed, train_model
 
@@ -64,9 +64,26 @@ def run_one_site(site, cfg, seed, device, results_root):
 
     # Train (with automatic checkpointing and epoch-level resumption)
     model = build_model(cfg, device=device)
-    best_state, history = train_model(model, train_loader, val_loader, cfg,
-                                       device=device, checkpoint_dir=out_dir,
-                                       resume=not force)
+    verify_bn_state(model, verbose=True)
+
+    # Phase 1: Small sites (BCDR, INbreast): fixed epoch count without premature early stopping
+    max_epochs = cfg.get("max_epochs", 50)
+    patience = cfg.get("patience", 12)
+    if site in ["BCDR", "INbreast"]:
+        max_epochs = cfg.get("small_site_epochs", 20)
+        patience = max_epochs
+
+    best_state, history = train_model(
+        model,
+        train_loader,
+        val_loader,
+        cfg,
+        device=device,
+        max_epochs=max_epochs,
+        patience=patience,
+        checkpoint_dir=out_dir,
+        resume=not force,
+    )
     model.load_state_dict(best_state)
     model.eval()
 
@@ -114,6 +131,8 @@ def run_one_site(site, cfg, seed, device, results_root):
         own_results=own_results,
         cross_results=cross_results,
         results_root=results_root,
+        output_dir=out_dir,
+        cfg=cfg,
     )
 
     return cross_results

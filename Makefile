@@ -13,7 +13,7 @@ smoke:
 	$(PYTHON) scripts/run_smoke.py
 
 run:
-	$(PYTHON) scripts/run_federated.py --config configs/experiment.yaml --seed 0
+	$(PYTHON) scripts/run_federated.py --config configs/experiment.yaml --seed 42
 
 lint:
 	$(RUFF) check src/ tests/ scripts/
@@ -23,3 +23,4 @@ format:
 
 clean:
 	rm -rf .pytest_cache .ruff_cache synthetic_data/ results/smoke/
+

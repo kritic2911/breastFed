@@ -77,7 +77,7 @@ eval:
   metrics: [auc, sensitivity_at_spec_90]
   threshold_on: val                    # decision threshold from val only
   bootstrap_patients: 1000             # patient-level bootstrap iterations
-  seeds: [0, 1, 2]                     # 3 independent repeats (seeds 0, 1, 2)
+  seeds: [42, 53, 64]                  # 3 independent repeats (seeds 42, 53, 64)
 
 # ─── Output ──────────────────────────────────────
 results_root: results

@@ -32,7 +32,7 @@ import yaml
 
 from src.dataset import build_pooled_loader, build_site_loader
 from src.evaluate import compute_metrics, evaluate_on_site, predict
-from src.model import build_model
+from src.model import build_model, verify_bn_state
 from src.storage import save_run_artifacts
 from src.train import set_seed, train_model
 
@@ -60,6 +60,7 @@ def get_or_train_centralized_model(cfg, seed, site_balanced, device, results_roo
     best_model_path = out_dir / "best.pt"
     calib_file = out_dir / "calibration.json"
     model = build_model(cfg, device=device)
+    verify_bn_state(model, verbose=True)
     history = []
     threshold = None
 
@@ -194,6 +195,7 @@ def evaluate_centralized_on_site(model, threshold, test_site, cfg, seed, device,
         cross_results={test_site: site_results},
         results_root=results_root,
         output_dir=out_dir,
+        cfg=cfg,
         extra_meta={
             "variant": variant,
             "test_site": test_site,

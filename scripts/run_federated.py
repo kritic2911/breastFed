@@ -38,7 +38,7 @@ def main():
         print(f"GPU device: {torch.cuda.get_device_name(0)}")
 
     if args.all_seeds:
-        seeds = cfg["eval"].get("seeds", [42, 43, 44])
+        seeds = cfg["eval"].get("seeds", [42, 53, 64])
     elif args.seeds:
         seeds = args.seeds
     elif args.seed is not None:

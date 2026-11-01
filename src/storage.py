@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 import torch
 
+from src.ledger import append_to_ledger
 from src.provenance import (
     StructuredLogger,
     generate_run_id,
@@ -209,7 +210,33 @@ def save_run_artifacts(
     else:
         df_new.to_csv(summary_csv_path, mode="w", header=True, index=False)
 
-    # 9. Append to experiment_log.md
+    # 9. Append to experiment ledger (results/ledger.csv)
+    ledger_csv_path = root / "ledger.csv"
+    for eval_site, res in cross_results.items():
+        img_m = res.get("image_level", {})
+        ci = res.get("bootstrap_auc_ci", {})
+        auc_val = img_m.get("auc")
+        if auc_val is not None:
+            append_to_ledger(
+                run_id=run_id,
+                phase="phase_1",
+                hypothesis_id="H_baseline",
+                method=method,
+                variant=extra_meta.get("variant", "standard") if extra_meta else "standard",
+                site=eval_site,
+                seed=seed,
+                metric="auc",
+                value=auc_val,
+                ci_low=ci.get("lower"),
+                ci_high=ci.get("upper"),
+                git_sha=git_sha,
+                split_hash="patient_grouped",
+                status="completed",
+                notes=f"train_site={train_site}",
+                ledger_path=ledger_csv_path,
+            )
+
+    # 10. Append to experiment_log.md
     log_file = Path("experiment_log.md")
     if log_file.exists():
         append_to_experiment_log(log_file, method, train_site, seed, cross_results, best_epoch, best_val_auc)
