@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import torch
 import yaml
 
+from src.calibration import TemperatureScaler
 from src.dataset import build_site_loader
 from src.evaluate import compute_metrics, evaluate_on_site, predict
 from src.model import build_model, verify_bn_state
@@ -87,18 +88,23 @@ def run_one_site(site, cfg, seed, device, results_root):
     model.load_state_dict(best_state)
     model.eval()
 
-    # Get threshold from val
-    val_probs, val_labels, _ = predict(model, val_loader, device)
+    # Get threshold and fit temperature scaling from val
+    val_probs, val_labels, _, val_logits = predict(model, val_loader, device, return_logits=True)
     val_metrics = compute_metrics(val_labels, val_probs)
     threshold = val_metrics["threshold"]
+    scaler = TemperatureScaler()
+    scaler.fit(val_logits, val_labels)
     print(f"\nDecision threshold selected from validation: {threshold:.4f} "
           f"(Sens@90%Spec: {val_metrics['sensitivity']:.4f})")
+    print(f"Validation temperature scaling fitted: T = {scaler.temperature:.3f} | "
+          f"Val ECE: {val_metrics.get('ece', 0.0):.4f}")
 
     # Evaluate on own test set
     own_results = evaluate_on_site(model, test_loader, device,
                                     threshold=threshold,
                                     n_bootstrap=cfg["eval"]["bootstrap_patients"],
-                                    seed=seed)
+                                    seed=seed,
+                                    scaler=scaler)
     auc = own_results["image_level"]["auc"]
     ci = own_results["bootstrap_auc_ci"]
     print(f"\n  [Self-Evaluation] {site} Test AUC: {auc:.4f} [{ci['lower']:.4f}, {ci['upper']:.4f}]")
@@ -113,7 +119,8 @@ def run_one_site(site, cfg, seed, device, results_root):
         other_results = evaluate_on_site(model, other_loader, device,
                                           threshold=threshold,
                                           n_bootstrap=cfg["eval"]["bootstrap_patients"],
-                                          seed=seed)
+                                          seed=seed,
+                                          scaler=scaler)
         cross_auc = other_results["image_level"]["auc"]
         cross_ci = other_results["bootstrap_auc_ci"]
         print(f"  [Cross-Site Evaluation] -> {other_site} Test AUC: {cross_auc:.4f} "

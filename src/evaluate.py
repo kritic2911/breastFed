@@ -5,21 +5,30 @@ import torch
 import torch.nn as nn
 from sklearn.metrics import roc_auc_score, roc_curve
 
+from src.calibration import compute_ece
+
 # ────────────────────────────────────────────────────────────────
 #  Inference
 # ────────────────────────────────────────────────────────────────
 
 @torch.no_grad()
-def predict(model: nn.Module, loader, device: str = "cpu"):
-    """Run inference, return arrays of (probabilities, labels, patient_ids)."""
+def predict(model: nn.Module, loader, device: str = "cpu", return_logits: bool = False):
+    """Run inference, return arrays of (probabilities, labels, patient_ids[, logits])."""
     model.eval()
-    all_probs, all_labels, all_pids = [], [], []
+    all_probs, all_labels, all_pids, all_logits = [], [], [], []
     for imgs, labels, pids in loader:
         logits = model(imgs.to(device, non_blocking=True)).squeeze(-1)
         probs = torch.sigmoid(logits).cpu().numpy()
         all_probs.append(probs)
         all_labels.append(labels.numpy())
         all_pids.extend(pids)
+        if return_logits:
+            all_logits.append(logits.cpu().numpy())
+    if return_logits:
+        return (np.concatenate(all_probs),
+                np.concatenate(all_labels),
+                np.array(all_pids),
+                np.concatenate(all_logits))
     return (np.concatenate(all_probs),
             np.concatenate(all_labels),
             np.array(all_pids))
@@ -78,6 +87,7 @@ def compute_metrics(labels, probs, threshold=None, target_specificity=0.90):
 
     sensitivity = preds[pos].mean() if pos.sum() > 0 else float("nan")
     specificity = 1.0 - preds[neg].mean() if neg.sum() > 0 else float("nan")
+    ece_info = compute_ece(probs, labels)
 
     return {
         "auc": float(auc),
@@ -86,6 +96,7 @@ def compute_metrics(labels, probs, threshold=None, target_specificity=0.90):
         "threshold": float(threshold),
         "prob_std": float(np.std(probs)),
         "prob_mean": float(np.mean(probs)),
+        "ece": float(ece_info["ece"]) if not np.isnan(ece_info["ece"]) else None,
         "n_pos": int(pos.sum()),
         "n_neg": int(neg.sum()),
         "n_total": len(labels),
@@ -160,22 +171,37 @@ def bootstrap_ci(probs, labels, patient_ids, metric_fn=roc_auc_score,
 # ────────────────────────────────────────────────────────────────
 
 def evaluate_on_site(model, loader, device, threshold=None,
-                     n_bootstrap=1000, seed=42):
-    """Full evaluation: predict → metrics → bootstrap CI.
+                     n_bootstrap=1000, seed=42, scaler=None):
+    """Full evaluation: predict → metrics → bootstrap CI → calibration.
 
     Parameters
     ----------
     threshold : float or None
         Pass the val-derived threshold when evaluating on test.
+    scaler : TemperatureScaler or None
+        Fitted temperature scaler for post-hoc calibration evaluation.
 
     Returns
     -------
     dict with image_level and patient_level metrics + CIs
     """
-    probs, labels, pids = predict(model, loader, device)
+    probs, labels, pids, logits = predict(model, loader, device, return_logits=True)
 
     # Image-level metrics
     img_metrics = compute_metrics(labels, probs, threshold=threshold)
+
+    # Post-hoc temperature calibration if scaler provided
+    calib_info = {}
+    if scaler is not None:
+        calib_probs = scaler.calibrate(logits)
+        calib_ece = compute_ece(calib_probs, labels)["ece"]
+        img_metrics["calibrated_ece"] = float(calib_ece) if not np.isnan(calib_ece) else None
+        img_metrics["temperature"] = float(scaler.temperature)
+        calib_info = {
+            "temperature": float(scaler.temperature),
+            "uncalibrated_ece": img_metrics.get("ece"),
+            "calibrated_ece": float(calib_ece) if not np.isnan(calib_ece) else None,
+        }
 
     # Patient-level aggregation
     pat_probs, pat_labels, pat_pids = aggregate_to_patient(probs, labels, pids)
@@ -188,6 +214,7 @@ def evaluate_on_site(model, loader, device, threshold=None,
         "image_level": img_metrics,
         "patient_level": pat_metrics,
         "bootstrap_auc_ci": ci,
+        "calibration": calib_info,
         "predictions": {
             "patient_ids": pids.tolist(),
             "labels": labels.tolist(),

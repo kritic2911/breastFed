@@ -236,6 +236,48 @@ def save_run_artifacts(
                 ledger_path=ledger_csv_path,
             )
 
+        ece_val = img_m.get("ece")
+        if ece_val is not None:
+            append_to_ledger(
+                run_id=run_id,
+                phase="phase_1",
+                hypothesis_id="H_baseline",
+                method=method,
+                variant=extra_meta.get("variant", "standard") if extra_meta else "standard",
+                site=eval_site,
+                seed=seed,
+                metric="ece",
+                value=ece_val,
+                ci_low=None,
+                ci_high=None,
+                git_sha=git_sha,
+                split_hash="patient_grouped",
+                status="completed",
+                notes=f"train_site={train_site}",
+                ledger_path=ledger_csv_path,
+            )
+
+        cal_ece = img_m.get("calibrated_ece")
+        if cal_ece is not None:
+            append_to_ledger(
+                run_id=run_id,
+                phase="phase_1",
+                hypothesis_id="H_baseline",
+                method=method,
+                variant=extra_meta.get("variant", "standard") if extra_meta else "standard",
+                site=eval_site,
+                seed=seed,
+                metric="calibrated_ece",
+                value=cal_ece,
+                ci_low=None,
+                ci_high=None,
+                git_sha=git_sha,
+                split_hash="patient_grouped",
+                status="completed",
+                notes=f"train_site={train_site}",
+                ledger_path=ledger_csv_path,
+            )
+
     # 10. Append to experiment_log.md
     log_file = Path("experiment_log.md")
     if log_file.exists():

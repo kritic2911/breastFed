@@ -61,15 +61,19 @@ def train_model(model, train_loader, val_loader, cfg, device="cpu",
     optimizer = Adam(get_trainable_params(model),
                      lr=lr, weight_decay=cfg["weight_decay"])
 
-    # ── LR Scheduler: linear warmup (5 epochs) → cosine decay ──
-    warmup_epochs = cfg.get("warmup_epochs", 5)
-    warmup_scheduler = LinearLR(optimizer, start_factor=0.1, total_iters=warmup_epochs)
-    cosine_scheduler = CosineAnnealingLR(optimizer,
-                                          T_max=max(max_epochs - warmup_epochs, 1),
-                                          eta_min=lr * 0.01)
-    scheduler = SequentialLR(optimizer,
-                              schedulers=[warmup_scheduler, cosine_scheduler],
-                              milestones=[warmup_epochs])
+    # ── LR Scheduler (constant or warmup + cosine decay) ──
+    constant_lr = cfg.get("constant_lr", True)
+    if not constant_lr:
+        warmup_epochs = cfg.get("warmup_epochs", 5)
+        warmup_scheduler = LinearLR(optimizer, start_factor=0.1, total_iters=warmup_epochs)
+        cosine_scheduler = CosineAnnealingLR(optimizer,
+                                              T_max=max(max_epochs - warmup_epochs, 1),
+                                              eta_min=lr * 0.01)
+        scheduler = SequentialLR(optimizer,
+                                  schedulers=[warmup_scheduler, cosine_scheduler],
+                                  milestones=[warmup_epochs])
+    else:
+        scheduler = None
 
     # Gradient clipping threshold
     max_grad_norm = cfg.get("max_grad_norm", 1.0)
@@ -147,9 +151,10 @@ def train_model(model, train_loader, val_loader, cfg, device="cpu",
         train_auc = train_metrics["auc"]
         train_prob_std = train_metrics.get("prob_std", float(np.std(all_train_probs)) if len(all_train_probs) else 0.0)
 
-        # Step the LR scheduler after each epoch
+        # Step the LR scheduler after each epoch if not constant
         current_lr = optimizer.param_groups[0]["lr"]
-        scheduler.step()
+        if scheduler is not None:
+            scheduler.step()
 
         # ── Validate ──
         probs, val_labels, _ = predict(model, val_loader, device)

@@ -30,6 +30,7 @@ import pandas as pd
 import torch
 import yaml
 
+from src.calibration import TemperatureScaler
 from src.dataset import build_pooled_loader, build_site_loader
 from src.evaluate import compute_metrics, evaluate_on_site, predict
 from src.model import build_model, verify_bn_state
@@ -128,27 +129,35 @@ def get_or_train_centralized_model(cfg, seed, site_balanced, device, results_roo
 
     model.eval()
 
-    # Calibrate decision threshold on validation set if not already loaded
-    if threshold is None:
-        print("  Calibrating decision threshold on pooled validation set...")
+    # Calibrate decision threshold and temperature scaling on validation set
+    scaler = TemperatureScaler()
+    scaler_file = out_dir / "temperature_scaler.json"
+    if threshold is None or not scaler_file.exists():
+        print("  Calibrating decision threshold and temperature scaling on pooled validation set...")
         _, pooled_val_loader = build_pooled_loader(data_root, all_sites, "val", cfg,
                                                     site_balanced=False)
-        val_probs, val_labels, _ = predict(model, pooled_val_loader, device)
+        val_probs, val_labels, _, val_logits = predict(model, pooled_val_loader, device, return_logits=True)
         val_metrics = compute_metrics(val_labels, val_probs)
         threshold = float(val_metrics["threshold"])
+        scaler.fit(val_logits, val_labels)
+        scaler.save(scaler_file)
         with open(calib_file, "w") as f:
             json.dump({
                 "threshold": threshold,
                 "val_auc": float(val_metrics["auc"]),
                 "val_sensitivity": float(val_metrics["sensitivity"]),
-                "val_specificity": float(val_metrics["specificity"])
+                "val_specificity": float(val_metrics["specificity"]),
+                "temperature": float(scaler.temperature),
+                "val_ece": val_metrics.get("ece"),
             }, f, indent=2)
+    else:
+        scaler.load(scaler_file)
 
-    print(f"  Calibrated Decision Threshold (Pooled Val): {threshold:.4f}")
-    return model, threshold, best_state, history, out_dir, variant
+    print(f"  Calibrated Decision Threshold (Pooled Val): {threshold:.4f} | Temperature: {scaler.temperature:.3f}")
+    return model, threshold, scaler, best_state, history, out_dir, variant
 
 
-def evaluate_centralized_on_site(model, threshold, test_site, cfg, seed, device,
+def evaluate_centralized_on_site(model, threshold, scaler, test_site, cfg, seed, device,
                                   results_root, out_dir, variant, best_state, history,
                                   force_eval=False):
     """Evaluate the already-trained centralized model on a specific test dataset."""
@@ -170,7 +179,8 @@ def evaluate_centralized_on_site(model, threshold, test_site, cfg, seed, device,
     site_results = evaluate_on_site(model, test_loader, device,
                                      threshold=threshold,
                                      n_bootstrap=cfg["eval"]["bootstrap_patients"],
-                                     seed=seed)
+                                     seed=seed,
+                                     scaler=scaler)
 
     auc = site_results["image_level"]["auc"]
     ci = site_results["bootstrap_auc_ci"]
@@ -255,7 +265,7 @@ def main():
 
     for seed in seeds:
         # STEP 1: Train (or load) the centralized model ONCE for this seed
-        model, threshold, best_state, history, out_dir, variant = get_or_train_centralized_model(
+        model, threshold, scaler, best_state, history, out_dir, variant = get_or_train_centralized_model(
             cfg, seed, args.site_balanced, device, cfg["results_root"],
             force_train=force_train
         )
@@ -263,7 +273,7 @@ def main():
         # STEP 2: Evaluate on the requested test site(s) using that single trained model
         for t_site in test_sites:
             evaluate_centralized_on_site(
-                model, threshold, t_site, cfg, seed, device, cfg["results_root"],
+                model, threshold, scaler, t_site, cfg, seed, device, cfg["results_root"],
                 out_dir, variant, best_state, history,
                 force_eval=force_eval
             )

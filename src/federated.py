@@ -21,9 +21,16 @@ import numpy as np
 import pandas as pd
 import torch
 
+from src.calibration import TemperatureScaler
 from src.dataset import build_site_loader
 from src.evaluate import compute_metrics, evaluate_on_site, predict
-from src.model import build_model, get_bn_keys, get_trainable_params, model_size_bytes
+from src.model import (
+    build_model,
+    get_bn_keys,
+    get_trainable_params,
+    model_size_bytes,
+    verify_bn_state,
+)
 from src.provenance import (
     StructuredLogger,
     generate_run_id,
@@ -173,6 +180,7 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
             print(f"  [FedProx Enabled] Proximal penalty mu = {fedprox_mu}")
 
         global_model = build_model(cfg, device=device)
+        verify_bn_state(global_model, verbose=True)
         global_state = copy.deepcopy(global_model.state_dict())
         total_model_bytes = model_size_bytes(global_model)
         freeze_bn = bool(cfg.get("freeze_bn", True))
@@ -361,8 +369,9 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
     print(f"\nBest round: {best_round} (avg_val_auc={best_avg_val_auc:.4f})")
     print("Running final test evaluation...")
 
-    # Get threshold from validation set (pooled across sites)
+    # Get threshold and fit per-site temperature scaling from validation set
     all_val_probs, all_val_labels = [], []
+    site_scalers = {}
     for site in sites:
         val_model = build_model(cfg, device=device)
         site_state = copy.deepcopy(best_global_state)
@@ -370,9 +379,14 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
             site_state.update(best_client_bn_states[site])
         val_model.load_state_dict(site_state)
         val_model.eval()
-        probs, labels, _ = predict(val_model, site_val_loaders[site], device)
+        probs, labels, _, logits = predict(val_model, site_val_loaders[site], device, return_logits=True)
         all_val_probs.append(probs)
         all_val_labels.append(labels)
+        scaler = TemperatureScaler()
+        scaler.fit(logits, labels)
+        site_scalers[site] = scaler
+        print(f"  Val calibration for {site:10s} | T = {scaler.temperature:.3f}")
+
     val_probs = np.concatenate(all_val_probs)
     val_labels = np.concatenate(all_val_labels)
     val_metrics = compute_metrics(val_labels, val_probs)
@@ -391,13 +405,15 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
         site_results = evaluate_on_site(
             test_model, site_test_loaders[site], device,
             threshold=threshold, n_bootstrap=cfg["eval"]["bootstrap_patients"],
-            seed=seed,
+            seed=seed, scaler=site_scalers.get(site),
         )
         test_results[site] = site_results
         auc = site_results["image_level"]["auc"]
         ci = site_results["bootstrap_auc_ci"]
+        calib_ece = site_results.get("image_level", {}).get("calibrated_ece")
+        ece_str = f" | calib ECE {calib_ece:.4f}" if calib_ece is not None else ""
         print(f"  {site:10s} | AUC {auc:.4f} [{ci['lower']:.4f}, {ci['upper']:.4f}] | "
-              f"sens {site_results['image_level']['sensitivity']:.4f}")
+              f"sens {site_results['image_level']['sensitivity']:.4f}{ece_str}")
 
     # ── Save all artifacts ──
     sites_label = "collaborative_4sites" if len(sites) == 4 else f"train_{'_'.join(sites)}"

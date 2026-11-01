@@ -22,6 +22,8 @@ This plan takes FL-Mammo from a shaky baseline to a federated breast-cancer dete
 6. If a gate fails twice, stop and report: what failed, the evidence, two hypotheses, the cheapest test for each.
 7. Label honestly: INbreast labels come from BI-RADS (radiologist assessment), CMMD and CBIS from pathology. Never call a BI-RADS-derived output a diagnosis.
 8. Scope is frozen. Anything not in the Must list in section 7 goes to Part B, however interesting.
+9. Maintain a usage_guide.md file explaining how to run the system, how to interpret the results, and what the limitations of the system are. Update it whenever you learn something new or important.
+10. Maintain experiment_log.md with all the experiments, their results, and lessons learned for regular review.
 
 **Gate report format** (the agent posts this at every checkpoint)
 

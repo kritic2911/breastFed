@@ -23,12 +23,14 @@ num_classes: 1                         # binary → BCEWithLogitsLoss
 
 # ─── Training (shared across all methods) ────────
 optimizer: adam
-lr: 3.0e-4                             # slightly higher LR (warmup handles initial instability)
+lr: 1.0e-4                             # constant stable LR (1e-4) across all methods
+constant_lr: true                      # constant LR avoids warmup spikes & decay discrepancies
 weight_decay: 1.0e-4
 batch_size: 32
 max_epochs: 50                         # more training time for small datasets to converge
-patience: 12                           # more tolerant early stopping (val AUC is noisy on small sets)
-warmup_epochs: 5                       # linear LR warmup before cosine annealing
+patience: 12                           # early stopping tolerance
+warmup_epochs: 0                       # constant LR (warmup disabled)
+small_site_epochs: 20                  # fixed epochs for BCDR & INbreast (no premature early stopping)
 max_grad_norm: 1.0                     # gradient clipping for stability
 num_workers: 4
 

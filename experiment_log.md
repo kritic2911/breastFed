@@ -522,3 +522,32 @@ Diagonal elements (**bold**) represent self-site evaluation (the "floor"). Off-d
 | **INbreast** | Cross-site | 0.5000 [0.5000, 0.5000] | 0.0000 | 0.0000 |
 
 ---
+
+
+---
+
+## 2026-11-01 | Session: Phase 0 Foundations Completion & Phase 1 Launch
+
+### 1. Daily Process Log & Summary of Changes
+- **Phase 0 Foundations Completed**:
+  - Implemented structured provenance and line-delimited `logs.jsonl` tracking in `src/provenance.py`.
+  - Implemented synthetic multi-site generator with stratified patient partitioning and planted lesions in `src/synthetic.py`.
+  - Implemented standardized artifact persistence and ledger tracking in `src/storage.py` and `src/ledger.py`.
+  - Built pytest suite (19/19 tests green) covering aggregation identity, weights sum to 1.0, zero patient split leakage, binary labels, BN keys exclusion, provenance, ledger statistics, and temperature scaling calibration.
+  - Built smoke runner `scripts/run_smoke.py` completing 2 FedAvg rounds on synthetic CPU data in 25.53 seconds (< 120s gate threshold). Phase 0 Gate PASSED.
+- **Rules of Engagement & Seed Update**:
+  - Evaluation seeds standardized to `[42, 53, 64]` across `configs/experiment.yaml`, runner scripts, and documentation per user directive.
+  - Implemented `scripts/run_resolution_test.py` to compare CBIS at 224 px vs 384 px.
+  - Fixed learning rate discrepancy: enforced `constant_lr: true` at $1.0 \times 10^{-4}$ in `configs/experiment.yaml` and `src/train.py` to eliminate peak LR spikes.
+  - Enforced `small_site_epochs: 20` for small sites (BCDR, INbreast) in `scripts/run_local.py` to prevent premature early stopping on noisy validation sets.
+  - Implemented calibration module `src/calibration.py` for ECE and validation temperature scaling.
+  - Implemented ledger aggregator `scripts/aggregate_results.py` calculating Student-$t$ 95% confidence intervals over seeds.
+  - Maintained `USAGE_GUIDE.md` (and symlinked `usage_guide.md`) and created architectural decision log `decisions.md` (Rules 9 & 10).
+
+### 2. Challenges Encountered & Resolutions
+- **Challenge 1 (Sandbox Mount Boundary)**: External virtual environment at `/home/kc/venv` could not be resolved inside standard terminal sandbox namespaces.
+  - *Resolution*: Moved venv directly into `.venv/` within repo root and updated all script shebangs. All tests, linting, and runners execute cleanly in sandbox.
+- **Challenge 2 (LR Schedule Discrepancies)**: Local/centralized training was previously utilizing warmup and cosine annealing with peak LR 3e-4, while federated ran at 1e-4, skewing comparability.
+  - *Resolution*: Fixed all pipelines to constant LR $1.0 \times 10^{-4}$ without warmup or decay.
+- **Challenge 3 (Small Cohort Early Stopping)**: BCDR and INbreast validation sets (~40 images) triggered early stopping prematurely due to batch variance.
+  - *Resolution*: Set fixed epoch count (20 epochs) for small sites without early stopping.
