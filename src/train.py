@@ -103,12 +103,13 @@ def train_model(model, train_loader, val_loader, cfg, device="cpu",
             epochs_no_improve = ckpt["epochs_no_improve"]
             history = ckpt["history"]
             start_epoch = ckpt["epoch"] + 1
-            # Advance scheduler to match resumed epoch
-            if "scheduler_state" in ckpt:
-                scheduler.load_state_dict(ckpt["scheduler_state"])
-            else:
-                for _ in range(start_epoch - 1):
-                    scheduler.step()
+            # Advance scheduler to match resumed epoch if present
+            if scheduler is not None:
+                if "scheduler_state" in ckpt and ckpt["scheduler_state"] is not None:
+                    scheduler.load_state_dict(ckpt["scheduler_state"])
+                else:
+                    for _ in range(start_epoch - 1):
+                        scheduler.step()
             if verbose:
                 print(f"  [Resume] Resuming training from epoch {start_epoch}/{max_epochs} "
                       f"(found checkpoint at epoch {ckpt['epoch']}, best val AUC: {best_val_auc:.4f})")
@@ -198,7 +199,7 @@ def train_model(model, train_loader, val_loader, cfg, device="cpu",
                 "epoch": epoch,
                 "model_state": model.state_dict(),
                 "optimizer_state": optimizer.state_dict(),
-                "scheduler_state": scheduler.state_dict(),
+                "scheduler_state": scheduler.state_dict() if scheduler is not None else None,
                 "best_val_auc": best_val_auc,
                 "best_state": best_state,
                 "epochs_no_improve": epochs_no_improve,

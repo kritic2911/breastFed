@@ -86,18 +86,28 @@ def main():
     df_summary = pd.DataFrame(rows)
     print(df_summary.to_string(index=False))
 
-    # Evaluate decision rule
+    # Evaluate decision rule under Rule 5 (paired difference 95% CI)
     if len(args.resolutions) >= 2:
         res1, res2 = args.resolutions[0], args.resolutions[1]
-        m1 = df_summary.loc[df_summary["Resolution"] == f"{res1}×{res1}", "Mean AUC"].values[0]
-        m2 = df_summary.loc[df_summary["Resolution"] == f"{res2}×{res2}", "Mean AUC"].values[0]
+        aucs1 = [r["auc"] for r in results_by_res[res1]]
+        aucs2 = [r["auc"] for r in results_by_res[res2]]
 
-        diff = m2 - m1
-        print(f"\nDelta AUC ({res2}px vs {res1}px): {diff:+.4f}")
-        if diff > 0.03:
-            print(f"-> RESOLUTION DECISION: Meaningful gain at {res2}px. Adopt {res2}px.")
+        paired_diffs = [a2 - a1 for a1, a2 in zip(aucs1, aucs2)]
+        diff_stats = compute_seed_statistics(paired_diffs)
+        mean_diff = diff_stats["mean"]
+        ci_low = diff_stats["ci_low"]
+        ci_high = diff_stats["ci_high"]
+
+        print(f"\nPaired Delta AUC ({res2}px - {res1}px) over seeds {args.seeds}:")
+        print(f"  Per-seed deltas: {[round(d, 4) for d in paired_diffs]}")
+        print(f"  Mean paired diff: {mean_diff:+.4f} | 95% CI: [{ci_low:+.4f}, {ci_high:+.4f}]")
+
+        if ci_low > 0.0 and mean_diff > 0.03:
+            print(f"-> DECISION: Significant gain outside 95% CI (excludes zero). Adopt {res2}px.")
         else:
-            print(f"-> RESOLUTION DECISION: Gain is marginal or within CI. Retain standard {res1}px for efficiency.")
+            print(f"-> DECISION (Rule 5 & Phase 1.2): 95% CI of paired difference includes zero [{ci_low:+.4f}, {ci_high:+.4f}].")
+            print(f"   No statistically significant improvement. Retain standard {res1}px for computational efficiency.")
+            print("   Document this negative result in the paper as planned.")
     print("=" * 75)
 
 

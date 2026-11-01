@@ -24,6 +24,7 @@ This plan takes FL-Mammo from a shaky baseline to a federated breast-cancer dete
 8. Scope is frozen. Anything not in the Must list in section 7 goes to Part B, however interesting.
 9. Maintain a usage_guide.md file explaining how to run the system, how to interpret the results, and what the limitations of the system are. Update it whenever you learn something new or important.
 10. Maintain experiment_log.md with all the experiments, their results, and lessons learned for regular review.
+11. Store gate reports.
 
 **Gate report format** (the agent posts this at every checkpoint)
 

@@ -112,8 +112,13 @@ def aggregate_ledger(
     ledger_path: str | Path = "results/ledger.csv",
     phase: str = None,
     metric: str = "auc",
+    own_site_only: bool = True,
 ) -> pd.DataFrame:
-    """Read ledger and compute mean ± 95% CI across seeds per (method, variant, site)."""
+    """Read ledger and compute mean ± 95% CI across seeds per (method, variant, site).
+
+    For method='local', if own_site_only=True, only considers self-site evaluation
+    (e.g. trained on CMMD evaluated on CMMD).
+    """
     p = Path(ledger_path)
     if not p.exists():
         return pd.DataFrame()
@@ -123,6 +128,12 @@ def aggregate_ledger(
         df = df[df["phase"] == phase]
     if metric:
         df = df[df["metric"] == metric]
+
+    if own_site_only:
+        # Filter local rows to own-site only
+        is_local = df["method"] == "local"
+        is_own = df.apply(lambda r: f"train_site={r['site']}" in str(r.get("notes", "")), axis=1)
+        df = df[(~is_local) | (is_local & is_own)]
 
     records = []
     groups = df.groupby(["method", "variant", "site"])

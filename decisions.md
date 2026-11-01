@@ -21,7 +21,12 @@ This document records the foundational technical and methodological decisions fo
 ### Decision 3: Standard 224 px Input Resolution with Dedicated CBIS 384 px Test
 - **What**: Use $224 \times 224$ as the default image resolution for all comparative benchmarks, and evaluate $384 \times 384$ in a targeted resolution study on CBIS-DDSM (`scripts/run_resolution_test.py`).
 - **Why**: Training full $512 \times 512$ mammograms requires substantial VRAM and computational time (~4x increase per epoch), which exceeds our 20-day presentation timeline on a single 4 GB RTX 2050 GPU. CBIS-DDSM contains predominantly microcalcifications which are most sensitive to downsampling. If 384 px does not produce a statistically significant AUC gain outside the 95% CI on CBIS, retaining 224 px preserves efficiency without sacrificing validated performance.
-- **How to verify**: Compare CBIS test AUC 95% CIs between 224 px and 384 px across seeds 42, 53, 64 in `scripts/run_resolution_test.py`.
+- **Empirical Resolution Test Findings (Seeds 42, 53, 64)**:
+  - 224 px: Mean AUC $0.4188 \pm 0.0198$, 95% CI $[0.3696, 0.4680]$
+  - 384 px: Mean AUC $0.4527 \pm 0.0354$, 95% CI $[0.3649, 0.5405]$
+  - Paired Difference: $+0.0339$, 95% CI $[-0.0480, +0.1158]$ (excludes zero: False)
+  - Execution Time: 384 px was $3.5\times$ slower (~30-35s/epoch vs 8-10s/epoch at 224 px).
+  - Decision: Under Rule 5, because the 95% CI of the paired difference includes zero, we cannot claim a statistically significant improvement. Standard 224 px is retained for efficiency across the benchmark matrix and this negative result is reported in the paper.
 
 ---
 
@@ -43,3 +48,4 @@ This document records the foundational technical and methodological decisions fo
 - **What**: Select the binary classification decision threshold strictly on the validation set where False Positive Rate $FPR \le 0.10$ (i.e. $\text{Specificity} \ge 90\%$). Apply this frozen threshold to evaluate test set sensitivity.
 - **Why**: Tuning decision thresholds directly on test sets violates ML evaluation hygiene and artificially inflates reported sensitivity. Setting a target of 90% specificity reflects clinical screening triage requirements, where unnecessary recalls must be minimized.
 - **How to verify**: `metrics.json` records `val_decision_threshold` and confirms `sens_at_90_spec` on the test set is calculated using that exact threshold.
+

@@ -97,7 +97,7 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
     data_root = cfg["data_root"]
     n_rounds = cfg["fed"]["rounds"]
     weighting = cfg["fed"]["weighting"]
-    effective_method = method_name or f"federated_{weighting}"
+    effective_method = method_name or "federated"
 
     run_id, config_hash, git_sha = generate_run_id(cfg)
     out = Path(output_dir) if output_dir else Path(cfg.get("results_root", "results")) / run_id
@@ -434,6 +434,7 @@ def run_federated(cfg, seed, device="cpu", output_dir=None, resume=True,
         git_sha=git_sha,
         logger=logger,
         extra_meta={
+            "variant": weighting,
             "weighting": weighting,
             "best_round": best_round,
             "best_avg_val_auc": float(best_avg_val_auc),
