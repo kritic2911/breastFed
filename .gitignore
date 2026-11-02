@@ -6,7 +6,7 @@ data/
 *.jpg
 *.jpeg
 synthetic_data/
-
+scripts/datasets/
 # Experiment results & runs
 results/
 run/
