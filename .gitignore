@@ -11,7 +11,7 @@ scripts/datasets/
 results/
 run/
 runs/
-
+AGENTS.md
 # Python & virtual environment
 .venv/
 venv/
