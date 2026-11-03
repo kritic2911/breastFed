@@ -1,0 +1,41 @@
+site,index,patient_hash_prefix,laterality_view,label,label_name,raw_finding,split,format,bit_depth,tissue_pct,lesion_boxes
+vindr,1,f9d54e82,L-CC,0,0: Normal,BI-RADS 1,train,DICOM,16,18.83,0
+vindr,2,5e43df81,L-MLO,0,0: Normal,BI-RADS 1,test,DICOM,16,22.52,0
+vindr,3,e8f62b74,L-CC,0,0: Normal,BI-RADS 1,train,DICOM,16,14.75,0
+vindr,4,458f10bf,R-MLO,1,1: Benign,BI-RADS 2,test,DICOM,16,18.6,0
+vindr,5,eb55ff76,R-MLO,1,1: Benign,BI-RADS 2,train,DICOM,16,40.08,0
+vindr,6,aeaed7af,R-CC,1,1: Benign,BI-RADS 2,train,DICOM,16,10.24,0
+vindr,7,0eb223e0,L-CC,2,2: Suspicious/Mal,BI-RADS 4,train,DICOM,16,9.95,1
+vindr,8,1c4ff385,L-CC,2,2: Suspicious/Mal,BI-RADS 4,train,DICOM,16,22.2,2
+vindr,9,9113ae5c,R-CC,2,2: Suspicious/Mal,BI-RADS 5,train,DICOM,16,46.3,4
+vindr,10,f2850ba3,L-CC,2,2: Suspicious/Mal,BI-RADS 4,train,DICOM,16,38.51,0
+cmmd,1,9c43d9e0,R-MLO,1,1: Benign,Class 1,train,DICOM,8,27.21,0
+cmmd,2,38967a65,L-MLO,1,1: Benign,Class 1,train,DICOM,8,14.34,0
+cmmd,3,bcad20a4,L-MLO,1,1: Benign,Class 1,train,DICOM,8,14.34,0
+cmmd,4,636473f8,R-MLO,1,1: Benign,Class 1,train,DICOM,8,14.34,0
+cmmd,5,00d8ca93,L-CC,1,1: Benign,Class 1,test,DICOM,8,19.36,0
+cmmd,6,f082d3e5,L-CC,2,2: Suspicious/Mal,Class 2,train,DICOM,8,19.36,0
+cmmd,7,0d12f815,R-CC,2,2: Suspicious/Mal,Class 2,train,DICOM,8,19.36,0
+cmmd,8,1808dcea,R-CC,2,2: Suspicious/Mal,Class 2,train,DICOM,8,19.81,0
+cmmd,9,ebabb4da,R-CC,2,2: Suspicious/Mal,Class 2,train,DICOM,8,19.81,0
+cmmd,10,2e5c3f7b,L-MLO,2,2: Suspicious/Mal,Class 2,train,DICOM,8,14.34,0
+inbreast,1,b6b0d05c,L-MLO,0,0: Normal,1,test,DICOM,16,28.3,0
+inbreast,2,e30a5e5e,L-MLO,0,0: Normal,1,train,DICOM,16,29.53,0
+inbreast,3,fe046160,L-CC,0,0: Normal,1,train,DICOM,16,31.06,0
+inbreast,4,d923fef8,L-MLO,1,1: Benign,2,train,DICOM,16,44.13,2
+inbreast,5,71448d7a,R-CC,1,1: Benign,3,train,DICOM,16,37.2,1
+inbreast,6,86f75ec5,L-CC,1,1: Benign,2,train,DICOM,16,21.94,4
+inbreast,7,ea329907,L-MLO,2,2: Suspicious/Mal,5,train,DICOM,16,36.46,16
+inbreast,8,5c4dcf36,R-MLO,2,2: Suspicious/Mal,5,train,DICOM,16,33.01,19
+inbreast,9,9b8e7a0b,R-MLO,2,2: Suspicious/Mal,4c,train,DICOM,16,44.83,5
+inbreast,10,472d83e8,L-CC,1,1: Benign,2,train,DICOM,16,26.49,8
+cdd,1,e19c06d1,R-CC,0,0: Normal,1,test,JPG,8,71.95,0
+cdd,2,3f6da704,L-CC,0,0: Normal,1,train,JPG,8,62.72,0
+cdd,3,aa55eee2,R-CC,0,0: Normal,1,test,JPG,8,68.9,0
+cdd,4,298fec3c,R-CC,1,1: Benign,2,test,JPG,8,78.38,5
+cdd,5,9e3cd766,R-CC,1,1: Benign,4$2,train,JPG,8,71.54,2
+cdd,6,f368a00c,R-CC,1,1: Benign,2,train,JPG,8,68.08,3
+cdd,7,0f1e2402,R-MLO,2,2: Suspicious/Mal,5,test,JPG,8,74.12,9
+cdd,8,f1813eb0,L-MLO,2,2: Suspicious/Mal,4,train,JPG,8,67.88,2
+cdd,9,756fe073,R-MLO,2,2: Suspicious/Mal,3,train,JPG,8,77.46,1
+cdd,10,7ff194f9,R-MLO,1,1: Benign,3,train,JPG,8,82.91,1

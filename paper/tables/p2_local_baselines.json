@@ -1,0 +1,238 @@
+[
+  {
+    "run_id": "20261102_203246-6c568d7a-549ff35",
+    "site": "vindr",
+    "seed": 42,
+    "val_macro_auc": 0.7054,
+    "test_macro_auc": 0.6662799275256929
+  },
+  {
+    "run_id": "20261102_203959-3c85d0fe-549ff35",
+    "site": "vindr",
+    "seed": 53,
+    "val_macro_auc": 0.6575,
+    "test_macro_auc": 0.7170186883972381
+  },
+  {
+    "run_id": "20261102_204358-aa854123-549ff35",
+    "site": "vindr",
+    "seed": 64,
+    "val_macro_auc": 0.727,
+    "test_macro_auc": 0.6535964521799312
+  },
+  {
+    "run_id": "20261103_001836-26731e92-549ff35",
+    "site": "cmmd",
+    "seed": 42,
+    "val_macro_auc": 0.8172,
+    "test_macro_auc": 0.822489155822489
+  },
+  {
+    "run_id": "20261103_003627-2182992e-549ff35",
+    "site": "cmmd",
+    "seed": 53,
+    "val_macro_auc": 0.8539,
+    "test_macro_auc": 0.7982056130204279
+  },
+  {
+    "run_id": "20261103_111229-b4ba6263-549ff35",
+    "site": "cmmd",
+    "seed": 64,
+    "val_macro_auc": 0.7917098445595854,
+    "test_macro_auc": 0.7913469024580135,
+    "test_ci": [
+      0.7400254893624116,
+      0.8340377727442122
+    ],
+    "test_metrics": {
+      "n_breasts": 354,
+      "n_patients": 335,
+      "available_classes": [
+        1,
+        2
+      ],
+      "macro_auc": 0.7913469024580135,
+      "auc_class_2_vs_rest": 0.7913469024580135,
+      "sens_at_90_spec": 0.5761316872427984,
+      "threshold_90_spec": 0.4815827012062073,
+      "macro_f1": 0.6785500193941958,
+      "recall_class_1": 0.7567567567567568,
+      "recall_class_2": 0.6337448559670782,
+      "ece": 0.05246962253320016
+    }
+  },
+  {
+    "run_id": "20261103_112327-2f63c92a-549ff35",
+    "site": "inbreast",
+    "seed": 42,
+    "val_macro_auc": 0.7013764281880225,
+    "test_macro_auc": 0.6635495744191396,
+    "test_ci": [
+      0.5114748341098737,
+      0.8353827030812325
+    ],
+    "test_metrics": {
+      "n_breasts": 39,
+      "n_patients": 22,
+      "available_classes": [
+        0,
+        1,
+        2
+      ],
+      "macro_auc": 0.6635495744191396,
+      "auc_class_2_vs_rest": 0.8555555555555556,
+      "sens_at_90_spec": 0.6666666666666666,
+      "threshold_90_spec": 0.2333402782678604,
+      "macro_f1": 0.540461215932914,
+      "recall_class_0": 0.14285714285714285,
+      "recall_class_1": 0.8695652173913043,
+      "recall_class_2": 0.5555555555555556,
+      "ece": 0.19708079710984838
+    }
+  },
+  {
+    "run_id": "20261103_112450-5d82b187-549ff35",
+    "site": "inbreast",
+    "seed": 53,
+    "val_macro_auc": 0.8279371091871092,
+    "test_macro_auc": 0.7838159458630473,
+    "test_ci": [
+      0.6623021004538001,
+      0.8976075226856477
+    ],
+    "test_metrics": {
+      "n_breasts": 39,
+      "n_patients": 22,
+      "available_classes": [
+        0,
+        1,
+        2
+      ],
+      "macro_auc": 0.7838159458630473,
+      "auc_class_2_vs_rest": 0.8481481481481481,
+      "sens_at_90_spec": 0.2222222222222222,
+      "threshold_90_spec": 0.9796499013900757,
+      "macro_f1": 0.4308469308469309,
+      "recall_class_0": 0.2857142857142857,
+      "recall_class_1": 0.34782608695652173,
+      "recall_class_2": 0.8888888888888888,
+      "ece": 0.3309525404220972
+    }
+  },
+  {
+    "run_id": "20261103_112641-6968d081-549ff35",
+    "site": "inbreast",
+    "seed": 64,
+    "val_macro_auc": 0.9370396511700859,
+    "test_macro_auc": 0.7568888505482709,
+    "test_ci": [
+      0.6407477515281121,
+      0.8649224386769422
+    ],
+    "test_metrics": {
+      "n_breasts": 39,
+      "n_patients": 22,
+      "available_classes": [
+        0,
+        1,
+        2
+      ],
+      "macro_auc": 0.7568888505482709,
+      "auc_class_2_vs_rest": 0.8851851851851852,
+      "sens_at_90_spec": 0.5555555555555556,
+      "threshold_90_spec": 0.8415567278862,
+      "macro_f1": 0.4296296296296296,
+      "recall_class_0": 0.0,
+      "recall_class_1": 0.6086956521739131,
+      "recall_class_2": 0.7777777777777778,
+      "ece": 0.23814076872972342
+    }
+  },
+  {
+    "run_id": "20261103_112823-e7ce6a0c-549ff35",
+    "site": "cdd",
+    "seed": 42,
+    "val_macro_auc": 0.716870537189778,
+    "test_macro_auc": 0.7894603950442075,
+    "test_ci": [
+      0.7344996362882937,
+      0.8474338295307378
+    ],
+    "test_metrics": {
+      "n_breasts": 112,
+      "n_patients": 64,
+      "available_classes": [
+        0,
+        1,
+        2
+      ],
+      "macro_auc": 0.7894603950442075,
+      "auc_class_2_vs_rest": 0.8501461988304093,
+      "sens_at_90_spec": 0.5277777777777778,
+      "threshold_90_spec": 0.20561596751213074,
+      "macro_f1": 0.5939551591725505,
+      "recall_class_0": 0.8095238095238095,
+      "recall_class_1": 0.5588235294117647,
+      "recall_class_2": 0.4166666666666667,
+      "ece": 0.1647695079445839
+    }
+  },
+  {
+    "run_id": "20261103_113054-73748354-549ff35",
+    "site": "cdd",
+    "seed": 53,
+    "val_macro_auc": 0.7594964422550629,
+    "test_macro_auc": 0.7553771171086519,
+    "test_ci": [
+      0.6919958179305475,
+      0.819332270426591
+    ],
+    "test_metrics": {
+      "n_breasts": 112,
+      "n_patients": 64,
+      "available_classes": [
+        0,
+        1,
+        2
+      ],
+      "macro_auc": 0.7553771171086519,
+      "auc_class_2_vs_rest": 0.8969298245614035,
+      "sens_at_90_spec": 0.5555555555555556,
+      "threshold_90_spec": 0.36831605434417725,
+      "macro_f1": 0.3876032159930465,
+      "recall_class_0": 0.07142857142857142,
+      "recall_class_1": 0.7941176470588235,
+      "recall_class_2": 0.4722222222222222,
+      "ece": 0.25040925453816143
+    }
+  },
+  {
+    "run_id": "20261103_113357-143c6ea7-549ff35",
+    "site": "cdd",
+    "seed": 64,
+    "val_macro_auc": 0.8370484400656814,
+    "test_macro_auc": 0.7595861916516494,
+    "test_ci": [
+      0.6905167065848051,
+      0.8290554541595034
+    ],
+    "test_metrics": {
+      "n_breasts": 112,
+      "n_patients": 64,
+      "available_classes": [
+        0,
+        1,
+        2
+      ],
+      "macro_auc": 0.7595861916516494,
+      "auc_class_2_vs_rest": 0.8567251461988303,
+      "sens_at_90_spec": 0.4722222222222222,
+      "threshold_90_spec": 0.9881963133811951,
+      "macro_f1": 0.590211119853134,
+      "recall_class_0": 0.6428571428571429,
+      "recall_class_1": 0.35294117647058826,
+      "recall_class_2": 0.8055555555555556,
+      "ece": 0.29613231601459644
+    }
+  }
+]

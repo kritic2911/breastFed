@@ -1,0 +1,85 @@
+{
+  "age_only": {
+    "by_site": {
+      "cdd": {
+        "macro_auc": 0.5877,
+        "class_2_auc": 0.6283,
+        "n_train": 432,
+        "n_test": 112
+      },
+      "cmmd": {
+        "macro_auc": 0.6594,
+        "class_2_auc": 0.6594,
+        "n_train": 1413,
+        "n_test": 354
+      },
+      "inbreast": {
+        "macro_auc": 0.5,
+        "class_2_auc": 0.5,
+        "n_train": 151,
+        "n_test": 39
+      },
+      "vindr": {
+        "macro_auc": 0.4858,
+        "class_2_auc": 0.4774,
+        "n_train": 597,
+        "n_test": 152
+      }
+    },
+    "pooled": {
+      "macro_auc": 0.5985,
+      "class_2_auc": 0.6157,
+      "n_train": 2593,
+      "n_test": 657
+    }
+  },
+  "label_permutation": {
+    "by_site": {
+      "cdd": {
+        "macro_auc_mean": 0.4995,
+        "macro_auc_std": 0.0428,
+        "macro_auc_ci": [
+          0.4129,
+          0.5828
+        ],
+        "n_test": 112
+      },
+      "cmmd": {
+        "macro_auc_mean": 0.4999,
+        "macro_auc_std": 0.0322,
+        "macro_auc_ci": [
+          0.4334,
+          0.5644
+        ],
+        "n_test": 354
+      },
+      "inbreast": {
+        "macro_auc_mean": 0.502,
+        "macro_auc_std": 0.0788,
+        "macro_auc_ci": [
+          0.3441,
+          0.6534
+        ],
+        "n_test": 39
+      },
+      "vindr": {
+        "macro_auc_mean": 0.5008,
+        "macro_auc_std": 0.0357,
+        "macro_auc_ci": [
+          0.4309,
+          0.5698
+        ],
+        "n_test": 152
+      }
+    },
+    "pooled": {
+      "macro_auc_mean": 0.4991,
+      "macro_auc_std": 0.0175,
+      "macro_auc_ci": [
+        0.4651,
+        0.5326
+      ],
+      "n_test": 657
+    }
+  }
+}

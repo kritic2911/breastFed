@@ -1,5 +1,6 @@
-# Data & labels (Rule 4: strictly no patient images or labels in git)
-data/
+# Data & labels (Rule 4 & 6: strictly no patient images or labels in git)
+/data/
+!src/data/
 *.dcm
 *.dicom
 *.png
@@ -26,6 +27,16 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+
+# Secrets & credentials (strictly prohibited in repository)
+.env
+.env.*
+*.key
+*.pem
+*.token
+*.secret
+secrets/
+credentials/
 
 # Misc & temporary
 misc/

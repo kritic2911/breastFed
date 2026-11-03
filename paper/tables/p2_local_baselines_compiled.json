@@ -1,0 +1,198 @@
+{
+  "summary": [
+    {
+      "site": "cdd",
+      "label_family": "biopsy",
+      "n_seeds": 3,
+      "val_macro_auc_mean": 0.7711,
+      "test_macro_auc_mean": 0.7681,
+      "test_macro_auc_std": 0.0186,
+      "test_bootstrap_ci_95": [
+        0.7067,
+        0.8292
+      ],
+      "seed_label": "n=3",
+      "age_only_auc": 0.5877,
+      "label_perm_auc": 0.4995
+    },
+    {
+      "site": "cmmd",
+      "label_family": "biopsy",
+      "n_seeds": 3,
+      "val_macro_auc_mean": 0.8209,
+      "test_macro_auc_mean": 0.804,
+      "test_macro_auc_std": 0.0164,
+      "test_bootstrap_ci_95": [
+        0.7601,
+        0.8491
+      ],
+      "seed_label": "n=3",
+      "age_only_auc": 0.6594,
+      "label_perm_auc": 0.4999
+    },
+    {
+      "site": "inbreast",
+      "label_family": "birads",
+      "n_seeds": 3,
+      "val_macro_auc_mean": 0.8221,
+      "test_macro_auc_mean": 0.7348,
+      "test_macro_auc_std": 0.0631,
+      "test_bootstrap_ci_95": [
+        0.6018,
+        0.8626
+      ],
+      "seed_label": "n=3",
+      "age_only_auc": 0.5,
+      "label_perm_auc": 0.502
+    },
+    {
+      "site": "vindr",
+      "label_family": "birads",
+      "n_seeds": 3,
+      "val_macro_auc_mean": 0.6966,
+      "test_macro_auc_mean": 0.679,
+      "test_macro_auc_std": 0.0336,
+      "test_bootstrap_ci_95": [
+        0.6132,
+        0.7373
+      ],
+      "seed_label": "n=3",
+      "age_only_auc": 0.4858,
+      "label_perm_auc": 0.5008
+    }
+  ],
+  "runs": [
+    {
+      "site": "cdd",
+      "seed": 42,
+      "run_id": "20261103_112823-e7ce6a0c-549ff35",
+      "val_macro_auc": 0.7169,
+      "test_macro_auc": 0.7895,
+      "test_ci_95": [
+        0.7345,
+        0.8474
+      ]
+    },
+    {
+      "site": "cdd",
+      "seed": 53,
+      "run_id": "20261103_113054-73748354-549ff35",
+      "val_macro_auc": 0.7595,
+      "test_macro_auc": 0.7554,
+      "test_ci_95": [
+        0.6908,
+        0.8173
+      ]
+    },
+    {
+      "site": "cdd",
+      "seed": 64,
+      "run_id": "20261103_113357-143c6ea7-549ff35",
+      "val_macro_auc": 0.837,
+      "test_macro_auc": 0.7596,
+      "test_ci_95": [
+        0.6948,
+        0.823
+      ]
+    },
+    {
+      "site": "cmmd",
+      "seed": 42,
+      "run_id": "20261103_001836-26731e92-549ff35",
+      "val_macro_auc": 0.8172,
+      "test_macro_auc": 0.8225,
+      "test_ci_95": [
+        0.782,
+        0.8648
+      ]
+    },
+    {
+      "site": "cmmd",
+      "seed": 53,
+      "run_id": "20261103_003627-2182992e-549ff35",
+      "val_macro_auc": 0.8539,
+      "test_macro_auc": 0.7982,
+      "test_ci_95": [
+        0.7534,
+        0.845
+      ]
+    },
+    {
+      "site": "cmmd",
+      "seed": 64,
+      "run_id": "20261103_111229-b4ba6263-549ff35",
+      "val_macro_auc": 0.7917,
+      "test_macro_auc": 0.7913,
+      "test_ci_95": [
+        0.7448,
+        0.8375
+      ]
+    },
+    {
+      "site": "inbreast",
+      "seed": 42,
+      "run_id": "20261103_112327-2f63c92a-549ff35",
+      "val_macro_auc": 0.7014,
+      "test_macro_auc": 0.6635,
+      "test_ci_95": [
+        0.5115,
+        0.8354
+      ]
+    },
+    {
+      "site": "inbreast",
+      "seed": 53,
+      "run_id": "20261103_112450-5d82b187-549ff35",
+      "val_macro_auc": 0.8279,
+      "test_macro_auc": 0.7838,
+      "test_ci_95": [
+        0.6526,
+        0.8933
+      ]
+    },
+    {
+      "site": "inbreast",
+      "seed": 64,
+      "run_id": "20261103_112641-6968d081-549ff35",
+      "val_macro_auc": 0.937,
+      "test_macro_auc": 0.7569,
+      "test_ci_95": [
+        0.6413,
+        0.859
+      ]
+    },
+    {
+      "site": "vindr",
+      "seed": 42,
+      "run_id": "20261102_203246-6c568d7a-549ff35",
+      "val_macro_auc": 0.7054,
+      "test_macro_auc": 0.6663,
+      "test_ci_95": [
+        0.5997,
+        0.7194
+      ]
+    },
+    {
+      "site": "vindr",
+      "seed": 53,
+      "run_id": "20261102_203959-3c85d0fe-549ff35",
+      "val_macro_auc": 0.6575,
+      "test_macro_auc": 0.717,
+      "test_ci_95": [
+        0.6585,
+        0.7719
+      ]
+    },
+    {
+      "site": "vindr",
+      "seed": 64,
+      "run_id": "20261102_204358-aa854123-549ff35",
+      "val_macro_auc": 0.727,
+      "test_macro_auc": 0.6536,
+      "test_ci_95": [
+        0.5814,
+        0.7208
+      ]
+    }
+  ]
+}

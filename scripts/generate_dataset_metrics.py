@@ -492,7 +492,7 @@ def analyze_cbis(data_dir: Path):
             m = re.search(r"(P_\d+)", fname)
             patient_id = m.group(1) if m else "Unknown"
 
-            with open(f, "r", encoding="utf-8") as fp:
+            with open(f, encoding="utf-8") as fp:
                 try:
                     data = json.load(fp)
                 except (json.JSONDecodeError, OSError) as e:

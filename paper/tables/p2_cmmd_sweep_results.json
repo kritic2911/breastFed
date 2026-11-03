@@ -1,0 +1,67 @@
+{
+  "sweep_grid": [
+    {
+      "bn_mode": "frozen",
+      "backbone_lr": 0.0001
+    },
+    {
+      "bn_mode": "frozen",
+      "backbone_lr": 0.0003
+    },
+    {
+      "bn_mode": "trainable",
+      "backbone_lr": 0.0001
+    },
+    {
+      "bn_mode": "trainable",
+      "backbone_lr": 0.0003
+    }
+  ],
+  "results": [
+    {
+      "run_id": "20261102_192030-f0ed2b25-549ff35",
+      "bn_mode": "frozen",
+      "backbone_lr": 0.0001,
+      "best_epoch": 24,
+      "val_macro_auc": 0.7779,
+      "val_macro_f1": 0.6899,
+      "duration_s": 474.77
+    },
+    {
+      "run_id": "20261102_193011-5e863811-549ff35",
+      "bn_mode": "frozen",
+      "backbone_lr": 0.0003,
+      "best_epoch": 6,
+      "val_macro_auc": 0.6475,
+      "val_macro_f1": 0.0,
+      "duration_s": 222.52
+    },
+    {
+      "run_id": "20261102_194224-daedc673-549ff35",
+      "bn_mode": "trainable",
+      "backbone_lr": 0.0001,
+      "best_epoch": 9,
+      "val_macro_auc": 0.8122,
+      "val_macro_f1": 0.7262,
+      "duration_s": 416.19
+    },
+    {
+      "run_id": "20261102_195104-4c9653ef-549ff35",
+      "bn_mode": "trainable",
+      "backbone_lr": 0.0003,
+      "best_epoch": 22,
+      "val_macro_auc": 0.8123,
+      "val_macro_f1": 0.7511,
+      "duration_s": 581.62
+    }
+  ],
+  "winner": {
+    "run_id": "20261102_195104-4c9653ef-549ff35",
+    "bn_mode": "trainable",
+    "backbone_lr": 0.0003,
+    "best_epoch": 22,
+    "val_macro_auc": 0.8123,
+    "val_macro_f1": 0.7511,
+    "duration_s": 581.62
+  }
+}

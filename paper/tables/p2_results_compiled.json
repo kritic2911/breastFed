@@ -1,0 +1,414 @@
+{
+  "summary": [
+    {
+      "method": "Local Baseline",
+      "site": "cdd",
+      "label_family": "biopsy",
+      "n_seeds": 3,
+      "val_macro_auc": 0.7711,
+      "test_macro_auc_mean": 0.7681,
+      "test_macro_auc_std": 0.0186,
+      "precision_mean": 0.5858,
+      "sensitivity_mean": 0.5471,
+      "specificity_mean": 0.7759,
+      "f1_mean": 0.5239,
+      "sens_at_90_spec": 0.5185,
+      "test_bootstrap_ci_95": [
+        0.7057,
+        0.8319
+      ],
+      "age_only_auc": 0.5877,
+      "label_perm_auc": 0.4995
+    },
+    {
+      "method": "Local Baseline",
+      "site": "cmmd",
+      "label_family": "biopsy",
+      "n_seeds": 3,
+      "val_macro_auc": 0.8209,
+      "test_macro_auc_mean": 0.804,
+      "test_macro_auc_std": 0.0164,
+      "precision_mean": 0.7121,
+      "sensitivity_mean": 0.716,
+      "specificity_mean": 0.7471,
+      "f1_mean": 0.7018,
+      "sens_at_90_spec": 0.5981,
+      "test_bootstrap_ci_95": [
+        0.7586,
+        0.8462
+      ],
+      "age_only_auc": 0.6594,
+      "label_perm_auc": 0.4999
+    },
+    {
+      "method": "Local Baseline",
+      "site": "inbreast",
+      "label_family": "birads",
+      "n_seeds": 3,
+      "val_macro_auc": 0.8221,
+      "test_macro_auc_mean": 0.7348,
+      "test_macro_auc_std": 0.0631,
+      "precision_mean": 0.5038,
+      "sensitivity_mean": 0.4974,
+      "specificity_mean": 0.7451,
+      "f1_mean": 0.467,
+      "sens_at_90_spec": 0.4815,
+      "test_bootstrap_ci_95": [
+        0.6048,
+        0.866
+      ],
+      "age_only_auc": 0.5,
+      "label_perm_auc": 0.502
+    },
+    {
+      "method": "Local Baseline",
+      "site": "vindr",
+      "label_family": "birads",
+      "n_seeds": 3,
+      "val_macro_auc": 0.6966,
+      "test_macro_auc_mean": 0.679,
+      "test_macro_auc_std": 0.0336,
+      "precision_mean": 0.4489,
+      "sensitivity_mean": 0.4662,
+      "specificity_mean": 0.7226,
+      "f1_mean": 0.3969,
+      "sens_at_90_spec": 0.3571,
+      "test_bootstrap_ci_95": [
+        0.6173,
+        0.7364
+      ],
+      "age_only_auc": 0.4858,
+      "label_perm_auc": 0.5008
+    },
+    {
+      "method": "Centralized (Pooled)",
+      "site": "vindr",
+      "label_family": "birads",
+      "n_seeds": 3,
+      "val_macro_auc": null,
+      "test_macro_auc_mean": 0.7317,
+      "test_macro_auc_std": 0.0194,
+      "precision_mean": 0.5921,
+      "sensitivity_mean": 0.5348,
+      "specificity_mean": 0.7605,
+      "f1_mean": 0.5293,
+      "sens_at_90_spec": 0.4841,
+      "test_bootstrap_ci_95": null,
+      "age_only_auc": 0.4858,
+      "label_perm_auc": 0.5008
+    },
+    {
+      "method": "Centralized (Pooled)",
+      "site": "cmmd",
+      "label_family": "biopsy",
+      "n_seeds": 3,
+      "val_macro_auc": null,
+      "test_macro_auc_mean": 0.803,
+      "test_macro_auc_std": 0.0114,
+      "precision_mean": 0.6909,
+      "sensitivity_mean": 0.5783,
+      "specificity_mean": 0.6634,
+      "f1_mean": 0.5831,
+      "sens_at_90_spec": 0.5775,
+      "test_bootstrap_ci_95": null,
+      "age_only_auc": 0.6594,
+      "label_perm_auc": 0.4999
+    },
+    {
+      "method": "Centralized (Pooled)",
+      "site": "inbreast",
+      "label_family": "birads",
+      "n_seeds": 3,
+      "val_macro_auc": null,
+      "test_macro_auc_mean": 0.8329,
+      "test_macro_auc_std": 0.0275,
+      "precision_mean": 0.6866,
+      "sensitivity_mean": 0.6122,
+      "specificity_mean": 0.7981,
+      "f1_mean": 0.6359,
+      "sens_at_90_spec": 0.5926,
+      "test_bootstrap_ci_95": null,
+      "age_only_auc": 0.5,
+      "label_perm_auc": 0.502
+    },
+    {
+      "method": "Centralized (Pooled)",
+      "site": "cdd",
+      "label_family": "biopsy",
+      "n_seeds": 3,
+      "val_macro_auc": null,
+      "test_macro_auc_mean": 0.8684,
+      "test_macro_auc_std": 0.0041,
+      "precision_mean": 0.7349,
+      "sensitivity_mean": 0.7093,
+      "specificity_mean": 0.8592,
+      "f1_mean": 0.7014,
+      "sens_at_90_spec": 0.6852,
+      "test_bootstrap_ci_95": null,
+      "age_only_auc": 0.5877,
+      "label_perm_auc": 0.4995
+    },
+    {
+      "method": "Centralized (Site-Balanced)",
+      "site": "vindr",
+      "label_family": "birads",
+      "n_seeds": 3,
+      "val_macro_auc": null,
+      "test_macro_auc_mean": 0.7265,
+      "test_macro_auc_std": 0.0259,
+      "precision_mean": 0.5594,
+      "sensitivity_mean": 0.5296,
+      "specificity_mean": 0.7557,
+      "f1_mean": 0.5028,
+      "sens_at_90_spec": 0.4683,
+      "test_bootstrap_ci_95": null,
+      "age_only_auc": 0.4858,
+      "label_perm_auc": 0.5008
+    },
+    {
+      "method": "Centralized (Site-Balanced)",
+      "site": "cmmd",
+      "label_family": "biopsy",
+      "n_seeds": 3,
+      "val_macro_auc": null,
+      "test_macro_auc_mean": 0.7928,
+      "test_macro_auc_std": 0.0179,
+      "precision_mean": 0.6952,
+      "sensitivity_mean": 0.5854,
+      "specificity_mean": 0.6756,
+      "f1_mean": 0.6056,
+      "sens_at_90_spec": 0.5501,
+      "test_bootstrap_ci_95": null,
+      "age_only_auc": 0.6594,
+      "label_perm_auc": 0.4999
+    },
+    {
+      "method": "Centralized (Site-Balanced)",
+      "site": "inbreast",
+      "label_family": "birads",
+      "n_seeds": 3,
+      "val_macro_auc": null,
+      "test_macro_auc_mean": 0.8188,
+      "test_macro_auc_std": 0.0031,
+      "precision_mean": 0.6656,
+      "sensitivity_mean": 0.6317,
+      "specificity_mean": 0.8012,
+      "f1_mean": 0.6369,
+      "sens_at_90_spec": 0.2593,
+      "test_bootstrap_ci_95": null,
+      "age_only_auc": 0.5,
+      "label_perm_auc": 0.502
+    },
+    {
+      "method": "Centralized (Site-Balanced)",
+      "site": "cdd",
+      "label_family": "biopsy",
+      "n_seeds": 3,
+      "val_macro_auc": null,
+      "test_macro_auc_mean": 0.8581,
+      "test_macro_auc_std": 0.0182,
+      "precision_mean": 0.6957,
+      "sensitivity_mean": 0.6568,
+      "specificity_mean": 0.8342,
+      "f1_mean": 0.6277,
+      "sens_at_90_spec": 0.6759,
+      "test_bootstrap_ci_95": null,
+      "age_only_auc": 0.5877,
+      "label_perm_auc": 0.4995
+    }
+  ],
+  "local_runs": [
+    {
+      "site": "cdd",
+      "seed": 42,
+      "run_id": "20261103_112823-e7ce6a0c-549ff35",
+      "val_macro_auc": 0.7169,
+      "test_macro_auc": 0.7895,
+      "precision": 0.6484,
+      "sensitivity": 0.595,
+      "specificity": 0.8038,
+      "f1": 0.594,
+      "sens_at_90_spec": 0.5278,
+      "test_ci_95": [
+        0.7345,
+        0.8474
+      ]
+    },
+    {
+      "site": "cdd",
+      "seed": 53,
+      "run_id": "20261103_113054-73748354-549ff35",
+      "val_macro_auc": 0.7595,
+      "test_macro_auc": 0.7554,
+      "precision": 0.5215,
+      "sensitivity": 0.4459,
+      "specificity": 0.7201,
+      "f1": 0.3876,
+      "sens_at_90_spec": 0.5556,
+      "test_ci_95": [
+        0.692,
+        0.8193
+      ]
+    },
+    {
+      "site": "cdd",
+      "seed": 64,
+      "run_id": "20261103_113357-143c6ea7-549ff35",
+      "val_macro_auc": 0.837,
+      "test_macro_auc": 0.7596,
+      "precision": 0.5876,
+      "sensitivity": 0.6005,
+      "specificity": 0.8039,
+      "f1": 0.5902,
+      "sens_at_90_spec": 0.4722,
+      "test_ci_95": [
+        0.6905,
+        0.8291
+      ]
+    },
+    {
+      "site": "cmmd",
+      "seed": 42,
+      "run_id": "20261103_001836-26731e92-549ff35",
+      "val_macro_auc": 0.8172,
+      "test_macro_auc": 0.8225,
+      "precision": 0.7234,
+      "sensitivity": 0.7316,
+      "specificity": 0.7444,
+      "f1": 0.7247,
+      "sens_at_90_spec": 0.6379,
+      "test_ci_95": [
+        0.782,
+        0.8648
+      ]
+    },
+    {
+      "site": "cmmd",
+      "seed": 53,
+      "run_id": "20261103_003627-2182992e-549ff35",
+      "val_macro_auc": 0.8539,
+      "test_macro_auc": 0.7982,
+      "precision": 0.7048,
+      "sensitivity": 0.7212,
+      "specificity": 0.736,
+      "f1": 0.7023,
+      "sens_at_90_spec": 0.5802,
+      "test_ci_95": [
+        0.7537,
+        0.8396
+      ]
+    },
+    {
+      "site": "cmmd",
+      "seed": 64,
+      "run_id": "20261103_111229-b4ba6263-549ff35",
+      "val_macro_auc": 0.7917,
+      "test_macro_auc": 0.7913,
+      "precision": 0.708,
+      "sensitivity": 0.6953,
+      "specificity": 0.7609,
+      "f1": 0.6786,
+      "sens_at_90_spec": 0.5761,
+      "test_ci_95": [
+        0.74,
+        0.834
+      ]
+    },
+    {
+      "site": "inbreast",
+      "seed": 42,
+      "run_id": "20261103_112327-2f63c92a-549ff35",
+      "val_macro_auc": 0.7014,
+      "test_macro_auc": 0.6635,
+      "precision": 0.6111,
+      "sensitivity": 0.5227,
+      "specificity": 0.7597,
+      "f1": 0.5405,
+      "sens_at_90_spec": 0.6667,
+      "test_ci_95": [
+        0.5115,
+        0.8354
+      ]
+    },
+    {
+      "site": "inbreast",
+      "seed": 53,
+      "run_id": "20261103_112450-5d82b187-549ff35",
+      "val_macro_auc": 0.8279,
+      "test_macro_auc": 0.7838,
+      "precision": 0.4937,
+      "sensitivity": 0.5075,
+      "specificity": 0.75,
+      "f1": 0.4308,
+      "sens_at_90_spec": 0.2222,
+      "test_ci_95": [
+        0.6623,
+        0.8976
+      ]
+    },
+    {
+      "site": "inbreast",
+      "seed": 64,
+      "run_id": "20261103_112641-6968d081-549ff35",
+      "val_macro_auc": 0.937,
+      "test_macro_auc": 0.7569,
+      "precision": 0.4066,
+      "sensitivity": 0.4622,
+      "specificity": 0.7257,
+      "f1": 0.4296,
+      "sens_at_90_spec": 0.5556,
+      "test_ci_95": [
+        0.6407,
+        0.8649
+      ]
+    },
+    {
+      "site": "vindr",
+      "seed": 42,
+      "run_id": "20261102_203246-6c568d7a-549ff35",
+      "val_macro_auc": 0.7054,
+      "test_macro_auc": 0.6663,
+      "precision": 0.4852,
+      "sensitivity": 0.4896,
+      "specificity": 0.7318,
+      "f1": 0.384,
+      "sens_at_90_spec": 0.381,
+      "test_ci_95": [
+        0.5997,
+        0.7194
+      ]
+    },
+    {
+      "site": "vindr",
+      "seed": 53,
+      "run_id": "20261102_203959-3c85d0fe-549ff35",
+      "val_macro_auc": 0.6575,
+      "test_macro_auc": 0.717,
+      "precision": 0.4084,
+      "sensitivity": 0.4871,
+      "specificity": 0.7307,
+      "f1": 0.379,
+      "sens_at_90_spec": 0.4286,
+      "test_ci_95": [
+        0.6607,
+        0.7719
+      ]
+    },
+    {
+      "site": "vindr",
+      "seed": 64,
+      "run_id": "20261102_204358-aa854123-549ff35",
+      "val_macro_auc": 0.727,
+      "test_macro_auc": 0.6536,
+      "precision": 0.4532,
+      "sensitivity": 0.422,
+      "specificity": 0.7054,
+      "f1": 0.4277,
+      "sens_at_90_spec": 0.2619,
+      "test_ci_95": [
+        0.5915,
+        0.7179
+      ]
+    }
+  ]
+}
