@@ -1,0 +1,25 @@
+{
+  "cohort": "Calcification Test Split (N=106 annotated cases)",
+  "cam_only": {
+    "hit_rate": 0.46226415094339623,
+    "mean_tv_distance": 0.5136315448751401
+  },
+  "detector_only": {
+    "hit_rate": 0.29245283018867924,
+    "mean_tv_distance": 0.6231107851246206
+  },
+  "product_map_combined": {
+    "hit_rate": 0.44339622641509435,
+    "mean_tv_distance": 0.5138965955094131,
+    "delta_hit_rate": -0.018867924528301883,
+    "delta_tv_distance": 0.0002650506342730674
+  },
+  "mean_agreement_score": 0.7171533752773205,
+  "pre_registered_criterion_1": {
+    "target_delta_hit_rate": 0.05,
+    "measured_delta_hit_rate": -0.018867924528301883,
+    "target_max_delta_tv": 0.05,
+    "measured_delta_tv": 0.0002650506342730674,
+    "status": "FAILED / NULL"
+  }
+}

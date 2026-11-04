@@ -58,6 +58,8 @@ def plot_convergence_curves(fig_dir: Path):
         ("fl_fedavg_sample_weighted", "FedAvg (Sample-Weighted, n=3)", "#1f77b4", "-"),
         ("fl_fedavg_uniform", "FedAvg (Uniform, n=3)", "#2ca02c", "-"),
         ("fl_per_family_uniform", "Per-Family Heads (Uniform, n=3)", "#9467bd", "-"),
+        ("fl_fedprox_mu0.01", "FedProx (mu=0.01, n=1)", "#ff7f0e", "--"),
+        ("fl_fedprox_mu0.1", "FedProx (mu=0.10, n=1)", "#d62728", ":"),
     ]
 
     fig, ax = plt.subplots(figsize=(9, 5.5), dpi=300)
@@ -83,8 +85,10 @@ def plot_convergence_curves(fig_dir: Path):
         mean_curve = np.mean(auc_mat, axis=0)
         std_curve = np.std(auc_mat, axis=0, ddof=1) if len(auc_mat) > 1 else np.zeros_like(mean_curve)
 
-        ax.plot(rounds, mean_curve, color=color, linestyle=lstyle, linewidth=2.2, marker="o", markersize=3.5, label=label)
-        ax.fill_between(rounds, mean_curve - std_curve, mean_curve + std_curve, color=color, alpha=0.12)
+        ax.plot(rounds, mean_curve, color=color, linestyle=lstyle, linewidth=2.0 if "n=1" in label else 2.5,
+                marker="o" if "n=3" in label else "^", markersize=3.5, label=label)
+        if len(auc_mat) > 1:
+            ax.fill_between(rounds, mean_curve - std_curve, mean_curve + std_curve, color=color, alpha=0.10)
 
     ax.set_title("Cross-Silo FL Strategy Convergence: Validation Macro-AUC vs Rounds", fontweight="bold", fontsize=13)
     ax.set_xlabel("Communication Round", fontsize=11)
@@ -92,11 +96,104 @@ def plot_convergence_curves(fig_dir: Path):
     ax.set_xlim(1, 20)
     ax.set_ylim(0.48, 0.90)
     ax.set_xticks(range(1, 21, 2))
-    ax.legend(loc="lower right", frameon=True, fontsize=10)
+    ax.legend(loc="lower right", frameon=True, fontsize=9.5)
     ax.grid(True, linestyle="--", alpha=0.5)
 
     fig.tight_layout()
     out_path = fig_dir / "fl_convergence_macro_auc.png"
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+    logger.info("Saved %s", out_path)
+
+
+def plot_e6_heterogeneity(fig_dir: Path):
+    """Plot Experiment E6: Hospital heterogeneity & leave-one-site-out generalization drop."""
+    sites = ["vindr", "cmmd", "inbreast", "cdd"]
+    site_labels = ["VinDr-Mammo\n(BIRADS)", "CMMD\n(Biopsy)", "INbreast\n(BIRADS)", "CDD-CESM\n(Biopsy)"]
+
+    # 1. Full 4-Site FL (Uniform FedAvg)
+    with open("paper/tables/fl_fedavg_uniform_results.json") as f:
+        full_runs = json.load(f)
+    full_aucs = [np.mean([r["per_site_metrics"][s]["macro_auc"] for r in full_runs]) for s in sites]
+
+    # 2. Leave-One-Site-Out (Held-out performance on the excluded site)
+    loo_files = {
+        "vindr": "paper/tables/fl_e6_leave_out_vindr_results.json",
+        "cmmd": "paper/tables/fl_e6_leave_out_cmmd_results.json",
+        "inbreast": "paper/tables/fl_e6_leave_out_inbreast_results.json",
+        "cdd": "paper/tables/fl_e6_leave_out_cdd_results.json",
+    }
+    loo_aucs = []
+    for s in sites:
+        with open(loo_files[s]) as f:
+            r = json.load(f)[0]
+            loo_aucs.append(r["per_site_metrics"][s]["macro_auc"])
+
+    # 3. Label-Family Isolations
+    with open("paper/tables/fl_e6_birads_only_results.json") as f:
+        birads_r = json.load(f)[0]
+    birads_aucs = [birads_r["per_site_metrics"][s]["macro_auc"] for s in sites]
+
+    with open("paper/tables/fl_e6_biopsy_only_results.json") as f:
+        biopsy_r = json.load(f)[0]
+    biopsy_aucs = [biopsy_r["per_site_metrics"][s]["macro_auc"] for s in sites]
+
+    # Plot figure with 2 subplots
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5.5), dpi=300)
+
+    # Subplot 1: Leave-One-Site-Out Generalization Gap
+    x = np.arange(len(sites))
+    width = 0.35
+    rects1 = ax1.bar(x - width/2, full_aucs, width, label="Participating in Collaborative FL",
+                     color="#2ca02c", alpha=0.85, edgecolor="black")
+    rects2 = ax1.bar(x + width/2, loo_aucs, width, label="Excluded (Zero-Shot Out-of-Domain)",
+                     color="#d62728", alpha=0.85, edgecolor="black")
+
+    for r1, r2, (i, s) in zip(rects1, rects2, enumerate(sites)):
+        h1 = r1.get_height()
+        h2 = r2.get_height()
+        diff = (h2 - h1)
+        ax1.annotate(f"{h1:.3f}", xy=(r1.get_x() + r1.get_width()/2, h1),
+                     xytext=(0, 3), textcoords="offset points", ha="center", va="bottom", fontsize=9, fontweight="bold")
+        ax1.annotate(f"{h2:.3f}\n({diff:+.3f})", xy=(r2.get_x() + r2.get_width()/2, h2),
+                     xytext=(0, 3), textcoords="offset points", ha="center", va="bottom", fontsize=8.5, fontweight="bold", color="darkred")
+
+    ax1.set_title("Experiment E6: Leave-One-Site-Out Generalization Drop", fontsize=11.5, fontweight="bold")
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(site_labels, fontsize=10)
+    ax1.set_ylabel("Macro-AUC", fontsize=11)
+    ax1.set_ylim(0.55, 0.95)
+    ax1.legend(loc="lower left", frameon=True, fontsize=9.5)
+    ax1.grid(True, axis="y", linestyle="--", alpha=0.5)
+
+    # Subplot 2: Cross-Family Transfer (BIRADS-Only vs Biopsy-Only vs All-Sites)
+    width3 = 0.26
+    r_all = ax2.bar(x - width3, full_aucs, width3, label="All 4 Sites Collaborative FL", color="#2ca02c", alpha=0.85, edgecolor="black")
+    r_birads = ax2.bar(x, birads_aucs, width3, label="BIRADS-Only FL (VinDr + INbreast)", color="#1f77b4", alpha=0.85, edgecolor="black")
+    r_biopsy = ax2.bar(x + width3, biopsy_aucs, width3, label="Biopsy-Only FL (CMMD + CDD)", color="#9467bd", alpha=0.85, edgecolor="black")
+
+    for r in r_all:
+        h = r.get_height()
+        ax2.annotate(f"{h:.2f}", xy=(r.get_x() + r.get_width()/2, h), xytext=(0, 3), textcoords="offset points",
+                     ha="center", va="bottom", fontsize=8, fontweight="bold")
+    for r in r_birads:
+        h = r.get_height()
+        ax2.annotate(f"{h:.2f}", xy=(r.get_x() + r.get_width()/2, h), xytext=(0, 3), textcoords="offset points",
+                     ha="center", va="bottom", fontsize=8)
+    for r in r_biopsy:
+        h = r.get_height()
+        ax2.annotate(f"{h:.2f}", xy=(r.get_x() + r.get_width()/2, h), xytext=(0, 3), textcoords="offset points",
+                     ha="center", va="bottom", fontsize=8)
+
+    ax2.set_title("Cross-Family Transfer: All Sites vs Label Family Cohorts", fontsize=11.5, fontweight="bold")
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(site_labels, fontsize=10)
+    ax2.set_ylim(0.55, 0.95)
+    ax2.legend(loc="lower left", frameon=True, fontsize=9.5)
+    ax2.grid(True, axis="y", linestyle="--", alpha=0.5)
+
+    fig.tight_layout()
+    out_path = fig_dir / "fl_e6_heterogeneity.png"
     fig.savefig(out_path, bbox_inches="tight")
     plt.close(fig)
     logger.info("Saved %s", out_path)
@@ -145,7 +242,7 @@ def plot_confusion_matrices(fig_dir: Path):
                     cm[tl, pl] += 1
                 class_names = ["Norm (0)", "Ben (1)", "Susp (2)"] if "birads" in site_titles[site].lower() else ["Norm (0)", "Ben (1)", "Mal (2)"]
 
-            im = ax.imshow(cm, cmap="Blues", interpolation="nearest")
+            ax.imshow(cm, cmap="Blues", interpolation="nearest")
             for r in range(cm.shape[0]):
                 for c in range(cm.shape[1]):
                     val = cm[r, c]
@@ -246,6 +343,7 @@ def generate_figures():
     plot_convergence_curves(fig_dir)
     plot_confusion_matrices(fig_dir)
     plot_per_class_ovr_auc(fig_dir)
+    plot_e6_heterogeneity(fig_dir)
 
 
 if __name__ == "__main__":

@@ -35,16 +35,18 @@ import pandas as pd
 
 from src.data.dataset import get_train_val_test_splits
 from src.train.local import train_local
-from src.utils.thermal import ThermalGuard
+from src.utils.config import create_thermal_guard, load_config
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 
-def run_cmmd_sweep():
-    manifest_csv = Path("data/manifest.csv")
+def run_cmmd_sweep(config_path: str = "configs/config.yaml"):
+    master_cfg = load_config(config_path)
+    data_cfg = master_cfg.get("data", {})
+    manifest_csv = Path(data_cfg.get("manifest_csv", "data/manifest.csv"))
     if not manifest_csv.exists():
-        logger.error("data/manifest.csv not found!")
+        logger.error("%s not found!", manifest_csv)
         sys.exit(1)
 
     mdf = pd.read_csv(manifest_csv)
@@ -63,7 +65,7 @@ def run_cmmd_sweep():
         {"bn_mode": "trainable", "backbone_lr": 3e-4},
     ]
 
-    thermal_guard = ThermalGuard(soft_c=70.0, hard_c=75.0, resume_c=55.0, check_every_iters=20)
+    thermal_guard = create_thermal_guard(master_cfg)
     results = []
 
     for idx, params in enumerate(grid, 1):

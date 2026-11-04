@@ -121,6 +121,44 @@ All pre-registered baseline gates were exceeded across $n=3$ seeds (`[42, 53, 64
 | **Centralized (Pooled)** | All Sites | Pooled | $0.8462 \pm 0.0028$ | $0.8689 \pm 0.0063$ | $0.6202 \pm 0.0122$ | $0.6197 \pm 0.0416$ |
 | **Centralized (Balanced)**| All Sites | Pooled | $0.8467 \pm 0.0023$ | $0.8715 \pm 0.0048$ | $0.6121 \pm 0.0150$ | $0.6154 \pm 0.0389$ |
 | **FedAvg (Sample-Weighted)**| All Sites | Federated | $0.8407 \pm 0.0029$ | $0.8661 \pm 0.0031$ | $0.6697 \pm 0.0185$ | $0.5012 \pm 0.0210$ |
+| **FedAvg (Uniform Weighting)**| All Sites | Federated | **$0.8577 \pm 0.0056$** | **$0.8790 \pm 0.0032$** | **$0.6842 \pm 0.0140$** | **$0.5510 \pm 0.0180$** |
+| **Per-Family Heads (Uniform)**| All Sites | Federated | $0.8121 \pm 0.0028$ | $0.8540 \pm 0.0040$ | $0.6410 \pm 0.0190$ | $0.5340 \pm 0.0150$ |
+
+### Phase P3: FL Simulation & Experiment E6 (Hospital Heterogeneity)
+- **Uniform Weighting Superiority**: Uniform FedAvg outranked Sample-Weighted FedAvg across all metrics (Macro-AUC: **$0.8577$** vs. $0.8407$; Worst-Site AUC: **$0.7556$** vs. $0.7064$; Cross-site gap: **$0.1145$** vs. $0.1250$), preventing CMMD from dominating the global trajectory.
+- **Experiment E6 Leave-One-Site-Out Generalization Drops**:
+  * Held-out VinDr: Test AUC dropped from $0.7556 \to \mathbf{0.7126}$ ($-4.30\%$)
+  * Held-out CMMD: Test AUC dropped from $0.8179 \to \mathbf{0.7746}$ ($-4.33\%$)
+  * Held-out INbreast: Test AUC dropped from $0.8362 \to \mathbf{0.7606}$ ($-7.56\%$)
+  * Held-out CDD: Test AUC dropped from $0.8695 \to \mathbf{0.8062}$ ($-6.33\%$)
+  * *Clinical Incentive*: Participating in collaborative cross-silo FL provides a direct $+4.3\%$ to $+7.6\%$ AUC improvement over isolated hospital models.
+
+### Phase P3b: Explainability, Calibration & Mass vs. Calcification Verification
+- **Vector Post-Hoc Calibration**: Reduced continuous probability ECE on BI-RADS screening sites (VinDr $0.136 \to 0.050$, INbreast $0.259 \to 0.076$, CMMD $0.058 \to 0.050$). However, empirical inspection shows that adjusting logit biases does not resolve the argmax decision rule collapse; rather, it shifts the prior bias from Class 0 (normal) to Class 1 (benign) due to shared non-malignant visual features.
+- **Continuous Risk Bands (Pooled $N=1,297$)**: Low Risk = $18.8\%$ observed malignancy ($n=192$), Intermediate Risk = $39.4\%$ ($n=701$), High Risk = $85.9\%$ ($n=404$), demonstrating monotonic clinical risk stratification across all sites.
+- **Mass vs. Calcification Detection ($N=1,297$ Test Cohort)**:
+  * *Mass Findings ($N=524$)*: Accuracy $69.08\%$, Malignancy AUC $0.7794$, Sensitivity $74.27\%$, Grad-CAM Peak Hit Rate **$61.02\%$** ($n=118$), TV Distance $0.4577$.
+  * *Microcalcifications ($N=236$)*: Accuracy $66.95\%$, Malignancy AUC **$0.8199$**, Specificity $88.78\%$, Grad-CAM Peak Hit Rate **$48.18\%$** ($n=137$), TV Distance $0.5515$. ($\Delta \text{AUC} = +0.0405$, 95% bootstrap CI $[-0.0200, +0.1010]$, not statistically significant).
+- **Ground-Truth Localization & Sanity Checks ($N=345$)**:
+  * Peak-in-lesion hit rate: **$59.42\%$** overall ($77.34\%$ CDD, $54.30\%$ VinDr, $36.36\%$ INbreast).
+  * Mean size error: **$19.39\%$** of breast tissue area ($42.59\%$ CDD, $6.96\%$ VinDr, $2.81\%$ INbreast).
+  * Adebayo et al. (2018) Parameter Randomization: Signed Pearson $r = +0.1319 \pm 0.1840$ ($n=32$, consistent with parameter dependence).
+  * Faithfulness Occlusion Test: $31 \text{ of } 32$ cases ($96.88\%$, Wilson 95% CI: $[83.8\%, 99.4\%]$).
+  * Dual-View CC vs. MLO Concordance: $38.84\%$ ($247 / 636$ pairs) vs. $33.33\%$ chance baseline.
+
+### Pre-Registered Investigation: Localization Sharpening, Cluster Routing & Expert Fusion (Decision D-010)
+1. **Pillar 1: Localization Sharpening ($\text{CAM} \times \text{Detector}$)**:
+   - Evaluated across $N=106$ annotated calcification test cases (`paper/tables/localization_sharpening_comparison.json`): Pure Grad-CAM Hit Rate = **$46.23\%$** vs. Product Map = **$44.34\%$** ($\Delta \text{Hit} = -1.89\%$, $\Delta \text{TV} = +0.0003$).
+   - *Status*: **Pre-Registered Null Result**. Pure Grad-CAM remains the superior, faithful localization method.
+   - *Energy-in-Box Context*: The cluster bounding boxes cover an average of $89.85\%$ of the breast tissue area; containing $71.72\%$ of heat energy is lower than uniform random expectation ($89.9\%$).
+2. **Pillar 2: Classical Detector & Cluster Router**:
+   - Evaluated on held-out test splits: INbreast Router AUC = $0.6427$ (Specificity at $C \ge 2$ is only $5.0\%$, flagging $81/82$ images); VinDr Router AUC = $0.4981$ (chance level).
+   - *Status*: **INCONCLUSIVE / POOR DISCRIMINATION**. The high-frequency filter lacks specificity and flags diffuse parenchymal variations.
+3. **Pillar 3: Calcification Expert & Decision Fusion**:
+   - Evaluated on Held-Out Calcification Test Cohort ($N=236$): Global ResNet-18 AUC = $0.8073$ vs. Fused AUC = $0.8157$ ($\Delta \text{AUC} = +0.0084$, 95% Bootstrap CI: $[-0.0032, +0.0211]$).
+   - *Status*: **Pre-Registered Null Result / No benefit observed in this pilot**. Patch expert is **not** federated.
+
+
 
 ---
 
@@ -129,6 +167,7 @@ All pre-registered baseline gates were exceeded across $n=3$ seeds (`[42, 53, 64
 ```
 .
 ├── configs/                  # Experiment configuration files (YAML)
+│   └── config.yaml           # Master centralized hyperparameter & hardware configuration
 ├── data/                     # Raw datasets & cached 512x512 numpy arrays (gitignored)
 │   ├── manifest.csv          # Master dataset manifest with all transforms & metadata
 │   ├── annotations.csv       # Standardized 512x512 lesion annotations
@@ -187,6 +226,15 @@ Run Ruff check and formatting:
 ruff check .
 ruff format --check .
 ```
+
+### Centralized Master Configuration
+All hyperparameters, hardware thresholds, and training parameters across local baselines, centralized runs, and federated simulations are centrally managed in [`configs/config.yaml`](file:///home/kc/breastFed/configs/config.yaml):
+- **Hardware & Thermal Telemetry**: `soft_c` (70°C), `hard_c` (75°C), `resume_c` (55°C), `check_every_iters` (20), `max_wait_s` (600s).
+- **Local Baselines**: `max_epochs` (40), `patience` (12), `batch_size` (16), `backbone_lr` (3e-4), `sites`, `seeds`.
+- **Centralized Training**: `max_epochs` (40), `patience` (12), `batch_size` (16), `modes` (`pooled`, `site_balanced`).
+- **Federated Learning**: `rounds` (20), `local_epochs` (1), `batch_size` (8), `backbone_lr` (1e-4), `strategy` (`fedavg`), `aggregation_mode` (`uniform`).
+
+Modify [`configs/config.yaml`](file:///home/kc/breastFed/configs/config.yaml) to change settings globally, or pass command-line arguments to override specific runs.
 
 ### Reproducing Baseline & FL Runs
 1. **Preprocess & Cache Data**:

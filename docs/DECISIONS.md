@@ -128,6 +128,75 @@ Every entry is immutable once signed off; deviations and waivers must be logged 
   - Argmax is restricted to the site's `available_classes` (e.g. CMMD masks class 0).
   - Report per-class One-vs-Rest AUCs (class 0, 1, 2) alongside macro-AUC to evaluate true ranking capability independent of threshold shifts.
 
+---
+
+### D-010: Pre-Registered Design & Success Criteria for Sharpened Localization, Cluster Routing, and Calcification Expert Fusion
+- **Date**: 2026-11-04 (Day 3–4, Phase P3b)
+- **Status**: Pre-Registered & Locked Prior to Implementation
+- **Context & Empirical Motivation**:
+  - Phase P3b verification of Mass vs. Calcification test cohorts revealed a structural resolution bottleneck:
+    * ResNet-18 operating on 512×512 inputs downsamples native digital mammograms ($3000 \times 4000$) by $6\times - 8\times$, yielding coarse $16 \times 16$ `layer4` feature maps (stride $\approx 32\,\text{px}$).
+    * Focal masses ($N=524$) exhibit large continuous contrast gradients, achieving a **$61.02\%$** peak-in-lesion hit rate and $0.458$ TV distance.
+    * Microcalcifications ($N=236$, typical size $<0.5\,\text{mm}$) undergo spatial gradient attenuation, yielding a lower peak hit rate (**$48.18\%$**) and more diffuse attribution (TV distance $0.552$), despite strong global textural malignancy ranking ($0.8199$ Class-2 AUC).
+- **Three-Pillar Architectural Specification**:
+  1. **Pillar 1: Localization Sharpening**:
+     - *Mechanisms*:
+       * Multiplicative map: $\text{Map}_{\text{final}} = \text{CAM} \times (\epsilon + \text{Detector Density})$. Coarse Grad-CAM specifies the macro-region, while the high-frequency speck detector snaps activation to actual microcalcifications.
+       * CAM-guided crops: Peak coordinate $(y^*, x^*)$ guides a native-resolution bounding crop for second-stage feature extraction.
+       * Agreement score: Energy-in-box overlap between Grad-CAM heat mass and detector bounding boxes, reported as an objective visual consistency metric.
+     - *Reporting Integrity*: Pure Grad-CAM is strictly preserved for faithfulness occlusion and Adebayo parameter-randomization sanity checks. Any detector product map is explicitly labelled as **"Combined Localization"**.
+     - *Evaluation Invariant*: Compare CAM-only vs. Detector-only vs. Product map on the 345 annotated test cases using Peak Hit Rate, 3×3 TV distance, and size error.
+  2. **Pillar 2: Classical Detector & Cluster Router**:
+     - *Detector*: Classical morphological white top-hat / difference-of-Gaussians (DoG) filter plus adaptive thresholding to detect bright high-frequency specks on high-resolution tissue.
+     - *Cluster Aggregation*: Real calcifications present as clusters rather than isolated specks. Specks are merged via spatial clustering (e.g. DBSCAN or connected components within radius $R$).
+     - *Router Decision Rule*: If cluster count $C \ge C_{\text{thresh}}$ and the fraction of small boxes exceeds threshold, route the breast to the specialized calcification expert.
+     - *Hyperparameter Hygiene*: Thresholds ($C_{\text{thresh}}$, box size cutoff) are tuned strictly on training/validation splits, never hand-picked.
+     - *Router Metric*: Evaluated directly as a binary classifier for "has calcification" on validation, reporting Precision, Recall, and F1 across all 4 sites.
+     - *Privacy & Test Invariants*: Zero ground-truth boxes fed at test time; the router depends strictly on detector output. Detector boxes, patches, and coordinates remain local to client storage.
+  3. **Pillar 3: Calcification Expert & Decision Fusion**:
+     - *Training Patches*: Extracted from INbreast point annotations and VinDr bounding boxes with image-level labels (weakly-supervised Multiple Instance Learning with max or attention pooling).
+     - *Fusion*: Logistic regression or linear calibration combining global ResNet-18 logits and calcification expert patch logits, fitted strictly on validation split.
+- **Pre-Registered Success Criteria (Write Down First)**:
+  1. **Criterion 1 (Localization Enhancement)**:
+     $$\Delta \text{Hit Rate} = \text{Hit Rate}_{\text{Product}} - \text{Hit Rate}_{\text{CAM-Only}} \ge +5.0\%$$
+     on the calcification test cohort ($N=137$ annotated), without increasing mean 3×3 TV distance by $>0.05$.
+  2. **Criterion 2 (Detector-Based Router Discrimination)**:
+     $$\text{Recall}_{\text{calc}} \ge 70.0\%, \quad \text{Precision}_{\text{calc}} \ge 50.0\% \quad (\text{F1} \ge 0.584)$$
+     measured against clinical finding ground truth on the validation split.
+  3. **Criterion 3 (Calcification Expert Decision Lift)**:
+     $$\Delta \text{AUC}_{\text{calc}} = \text{AUC}_{\text{Global+Expert}} - \text{AUC}_{\text{Global}} \ge +0.030$$
+     evaluated on the calcification test cohort ($N=236$), with a 1,000-resample paired patient bootstrap 95% confidence interval strictly excluding zero ($\text{CI}_{\text{lower}} > 0.000$).
+- **Null Result & Fallback Protocol (AGENTS.md Rule 5)**:
+  - If $\Delta \text{AUC}_{\text{calc}} < +0.030$ or the bootstrap CI crosses zero, the hypothesis that high-resolution patch routing overcomes 512 px pooling is rejected.
+  - The detector is retained solely as an explainability and reporting tool (visual overlay and agreement metric).
+  - The outcome is documented and published honestly as a **neutral/negative finding** with full statistical reporting (no p-hacking or silent tuning).
+- **Experimental Execution & Empirical Outcomes**:
+  1. *Criterion 1 (Localization Sharpening: Product Map vs CAM-Only)*:
+     - Evaluated on $N=106$ annotated calcification test cases (`paper/tables/localization_sharpening_comparison.json`):
+       * Pure Grad-CAM: Hit Rate = **$46.23\%$** | 3×3 TV Distance = **$0.5136$**
+       * Classical Detector Only: Hit Rate = **$29.25\%$** | 3×3 TV Distance = **$0.6231$**
+       * Product Map ($\text{CAM} \times \text{Detector}$): Hit Rate = **$44.34\%$** | 3×3 TV Distance = **$0.5139$** ($\Delta \text{Hit Rate} = -1.89\%$, $\Delta \text{TV} = +0.0003$)
+     - **Status**: **FAILED / NULL RESULT** (Target $\Delta \text{Hit Rate} \ge +5.0\%$ not met). High-frequency top-hat filters detect parenchymal variations in dense tissue, pulling spatial peak attention away from subtle lesions. Pure Grad-CAM is preserved.
+     - **Energy-in-Box Context**: While $71.72\%$ of Grad-CAM energy fell inside detected cluster bounding boxes, **the detected boxes covered $89.85\%$ of the breast tissue area on average**. Because the boxes occupy $\sim 90\%$ of the breast, containing $71.7\%$ of heat energy is lower than uniform random expectation and does not indicate selective localization.
+  2. *Criterion 2 (Detector-Based Router Discrimination)*:
+     - Evaluated on held-out test splits across sites (`paper/tables/p3b_rigorous_metric_audit.json`):
+       * INbreast held-out test (prevalence $75.61\%$): Router ROC-AUC = **$0.6427$**, Specificity at $\ge 90\%$ recall = **$25.0\%$**, and at $C \ge 2$, Specificity = **$5.0\%$** ($81$ of $82$ images flagged; precision = $76.54\%$, matching prevalence).
+       * VinDr held-out test (prevalence $14.47\%$): Router ROC-AUC = **$0.4981$** (chance), Specificity at $\ge 90\%$ recall = **$0.0\%$**, and at $C \ge 2$, Specificity = **$20.38\%$** ($236$ of $304$ images flagged; precision = $12.29\%$).
+     - **Status**: **INCONCLUSIVE / POOR DISCRIMINATION**. The high-frequency filter lacks specificity in dense fibroglandular tissue, flagging nearly every image to achieve high recall. It is not viable as an automated routing gate.
+  3. *Criterion 3 (Calcification Expert Decision Fusion)*:
+     - Evaluated on held-out calcification test cohort ($N=236$ images across all 4 sites, `paper/tables/calc_expert_fusion_results.json`):
+       * Global ResNet-18 Malignancy AUC: **$0.8073$**
+       * Global + Routed Expert Fused AUC: **$0.8157$**
+       * Measured $\Delta \text{AUC}_{\text{calc}}$: **$+0.0084$** (1,000-resample paired patient bootstrap 95% CI: $[-0.0032, +0.0211]$)
+     - **Status**: **FAILED / NULL RESULT** (Target $\Delta \text{AUC} \ge +0.030$ not met; 95% bootstrap CI crosses zero). **No benefit observed in this pilot**.
+- **Final Decision & Architectural Resolution**:
+  - In strict compliance with Decision D-010 Fallback Protocol and AGENTS.md Rule 5 (Honest Reporting) and Rule 7 (Simplest Defensible Thing First):
+    1. Weakly-supervised high-resolution patch MIL models provide no statistically significant lift over global ResNet-18 pooling ($\Delta \text{AUC} = +0.0084$, 95% CI: $[-0.0032, +0.0211]$).
+    2. We do **not** federate the patch expert model, preventing communication and architectural bloat.
+    3. The high-resolution microcalcification detector and DBSCAN clustering module are **retained exclusively for client-side explainability and reporting**: generating cluster counts, spatial descriptors, and visual overlays in structured reports without transmitting raw pixel ROIs.
+    4. All null results are formally documented as honest, negative findings in the BTP deliverable.
+
+
 
 
 

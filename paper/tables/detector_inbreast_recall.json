@@ -1,0 +1,41 @@
+{
+  "dataset": "INbreast (train/val split, n=326 images)",
+  "total_gt_points": 5339,
+  "hit_gt_points": 682,
+  "overall_point_recall": 0.1277392770181682,
+  "calc_image_detection_rate": 1.0,
+  "best_router_threshold_clusters": 1,
+  "best_router_f1": 0.8665511265164645,
+  "router_sweeps": {
+    "threshold_1_clusters": {
+      "threshold": 1,
+      "precision": 0.764525993883792,
+      "recall": 1.0,
+      "f1": 0.8665511265164645
+    },
+    "threshold_2_clusters": {
+      "threshold": 2,
+      "precision": 0.7617554858934169,
+      "recall": 0.972,
+      "f1": 0.8541300527240774
+    },
+    "threshold_3_clusters": {
+      "threshold": 3,
+      "precision": 0.7612903225806451,
+      "recall": 0.944,
+      "f1": 0.8428571428571429
+    },
+    "threshold_4_clusters": {
+      "threshold": 4,
+      "precision": 0.7533333333333333,
+      "recall": 0.904,
+      "f1": 0.8218181818181818
+    },
+    "threshold_5_clusters": {
+      "threshold": 5,
+      "precision": 0.75,
+      "recall": 0.852,
+      "f1": 0.797752808988764
+    }
+  }
+}

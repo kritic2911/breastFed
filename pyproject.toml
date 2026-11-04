@@ -1,4 +1,5 @@
 [tool.ruff]
+extend-exclude = ["*.log", "*.md", "*.txt", "*.png"]
 line-length = 120
 target-version = "py312"
 

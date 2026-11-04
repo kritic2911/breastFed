@@ -134,6 +134,8 @@ def train_local(
             hard_c=float(config.get("thermal_hard_c", 75.0)),
             resume_c=float(config.get("thermal_resume_c", 55.0)),
             check_every_iters=int(config.get("thermal_check_iters", 20)),
+            max_wait_s=float(config.get("thermal_max_wait_s", 600.0)),
+            pause_sleep_s=float(config.get("thermal_pause_sleep_s", 2.0)),
         )
 
     # Initialize model

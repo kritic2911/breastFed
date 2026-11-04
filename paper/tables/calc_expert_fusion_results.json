@@ -1,0 +1,15 @@
+{
+  "cohort": "Calcification Test Cohort (N=236 images across all 4 sites)",
+  "global_resnet18_auc": 0.8073055309080154,
+  "routed_expert_fused_auc": 0.8157349896480333,
+  "delta_auc": 0.008429458740017881,
+  "bootstrap_95ci_low": -0.0032115062633155307,
+  "bootstrap_95ci_high": 0.021128347746071533,
+  "pre_registered_criterion_3": {
+    "target_delta_auc": 0.03,
+    "measured_delta_auc": 0.008429458740017881,
+    "ci_strictly_positive": false,
+    "status": "FAILED / NULL RESULT"
+  },
+  "scientific_interpretation": "Hypothesis rejected (Null Result): High-resolution patch expert fusion on weak labels does not provide statistically significant lift over the global ResNet-18 model (Delta AUC < +0.030 or CI crosses zero). Per Decision D-010 and AGENTS.md Rule 5, the detector is retained strictly as an explainability and reporting tool."
+}

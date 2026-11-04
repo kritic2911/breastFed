@@ -1,0 +1,126 @@
+# ==============================================================================
+# Cross-Silo Federated Mammography BTP: Master Configuration File
+# ==============================================================================
+# Edit this single file to control hyperparameters across all pipelines:
+#   - Hardware safety & thermal cooldown thresholds / wait times
+#   - Local baseline epochs, learning rates, batch sizes, and patience
+#   - Centralized training epochs and balancing modes
+#   - Federated Learning rounds, local epochs, strategies, and aggregation modes
+#   - Dataset paths, random seeds, and anatomical explainability grids
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. HARDWARE & THERMAL TELEMETRY SAFETY RAILS
+# ------------------------------------------------------------------------------
+hardware:
+  device: "cuda"               # Compute device: "cuda" or "cpu"
+  thermal:
+    soft_c: 70.0               # Soft temperature threshold (°C): pause training until cooled
+    hard_c: 75.0               # Hard temperature threshold (°C): immediate emergency checkpoint + pause
+    resume_c: 55.0             # Cooldown resumption temperature (°C): training resumes once below this
+    check_every_iters: 20      # Frequency of GPU temperature sampling (every N iterations)
+    max_wait_s: 600.0          # Max cooldown wait time (seconds) before saving and exiting with code 75
+    pause_sleep_s: 2.0         # Sleep interval (seconds) between temperature poll checks while cooling
+
+# ------------------------------------------------------------------------------
+# 2. DATASET & SPLITS CONFIGURATION
+# ------------------------------------------------------------------------------
+data:
+  data_dir: "data"             # Path to data root directory
+  cache_dir: "data/cache512"   # Preprocessed 512x512 numpy float32 cache directory
+  manifest_csv: "data/manifest.csv"
+  annotations_csv: "data/annotations.csv"
+  image_size: 512              # Target height and width in pixels
+  val_size: 0.20               # Fraction of training set used for validation (patient-grouped)
+  seeds: [42, 53, 64]          # Random seeds for dataset partitioning and initialization
+  all_sites:                   # The 4 digital mammography hospital silos
+    - "vindr"                  # VinDr-Mammo (mini): Siemens / Planmed (BI-RADS family, classes 0, 1, 2)
+    - "cmmd"                   # CMMD: GE Senographe (biopsy family, classes 1, 2)
+    - "inbreast"               # INbreast: Siemens Mammomat Novation (BI-RADS family, classes 0, 1, 2)
+    - "cdd"                    # CDD-CESM: Low-Energy DM (biopsy family, classes 0, 1, 2)
+
+# ------------------------------------------------------------------------------
+# 3. BASE ARCHITECTURE & MODEL HEAD
+# ------------------------------------------------------------------------------
+model:
+  backbone: "resnet18"         # Backbone architecture (Torchvision ResNet-18)
+  num_classes: 3               # 3-class breast-level output (0: Normal, 1: Benign, 2: Suspicious/Malignant)
+  pretrained: true             # Initialize with ImageNet-1K pretrained weights
+  head_lr_mult: 10.0           # Learning rate multiplier for the linear classification head
+  bn_mode: "trainable"         # BatchNorm mode: "trainable" (Decision D-006 winner) or "frozen"
+
+# ------------------------------------------------------------------------------
+# 4. LOCAL BASELINE TRAINING PARAMETERS (Phase P2)
+# ------------------------------------------------------------------------------
+local_baseline:
+  max_epochs: 40               # Maximum training epochs for local models
+  patience: 12                 # Early stopping patience on validation macro-AUC (Decision D-007)
+  batch_size: 16               # Local batch size (Decision D-002: fits within 4 GB VRAM at 86.7 img/s)
+  backbone_lr: 0.0003          # Backbone learning rate (3e-4, Decision D-006)
+  weight_decay: 0.01           # AdamW weight decay
+  lr_schedule: "cosine"        # LR scheduler: "cosine" or "constant"
+  sites:                       # Sites to train local models on
+    - "vindr"
+    - "cmmd"
+    - "inbreast"
+    - "cdd"
+  seeds: [42, 53, 64]          # Seeds to run
+
+# ------------------------------------------------------------------------------
+# 5. CENTRALIZED TRAINING PARAMETERS (Phase P2)
+# ------------------------------------------------------------------------------
+centralized:
+  max_epochs: 40               # Maximum training epochs for pooled/centralized models
+  patience: 12                 # Early stopping patience on validation macro-AUC
+  batch_size: 16               # Batch size
+  backbone_lr: 0.0003          # Backbone learning rate (3e-4)
+  weight_decay: 0.01           # AdamW weight decay
+  lr_schedule: "cosine"        # LR scheduler: "cosine" or "constant"
+  modes:                       # Centralized training variants
+    - "pooled"                 # Sample-weighted pooled cohort
+    - "site_balanced"          # Equalized site sampling probabilities
+  seeds: [42, 53, 64]
+
+# ------------------------------------------------------------------------------
+# 6. FEDERATED LEARNING SIMULATION PARAMETERS (Phase P3)
+# ------------------------------------------------------------------------------
+federated:
+  rounds: 20                   # Total global communication rounds
+  local_epochs: 1              # Local training epochs per client per round
+  batch_size: 8                # Batch size per client (effective batch 16 via grad accumulation)
+  backbone_lr: 0.0001          # Constant backbone LR (1e-4, Decision D-008, prevents representation collapse)
+  strategy: "fedavg"           # FL strategy: "fedavg", "fedprox", "fedbn", "per_family_heads"
+  aggregation_mode: "uniform"  # Aggregation weighting: "uniform" (recommended) or "sample_weighted"
+  mu: 0.01                     # FedProx proximal regularizer parameter (used when strategy is "fedprox")
+  sites:                       # Client hospital silos participating in FL
+    - "vindr"
+    - "cmmd"
+    - "inbreast"
+    - "cdd"
+  seeds: [42, 53, 64]
+
+# ------------------------------------------------------------------------------
+# 7. EXPLAINABILITY & CLINICAL REPORTING (Phase P3b)
+# ------------------------------------------------------------------------------
+explainability:
+  target_layer: "layer4"       # ResNet-18 layer for Grad-CAM feature map extraction
+  grid_rows: 3                 # Anatomical grid row divisions (Lateral/Central/Medial or Upper/Central/Lower)
+  grid_cols: 3                 # Anatomical grid col divisions (Posterior/Middle/Anterior)
+  risk_threshold_low: 0.15     # Calibrated probability cutoff for Low Risk band
+  risk_threshold_high: 0.50    # Calibrated probability cutoff for High Risk band
+
+# ------------------------------------------------------------------------------
+# 8. SYSTEMS NETWORK EMULATION & SECURE AGGREGATION (Phases P4 & P5)
+# ------------------------------------------------------------------------------
+systems:
+  min_cohort_k: 3              # Minimum cohort guard (abort round if ready clients < k)
+  dropout_rate: 0.30           # Simulated district hospital non-random client dropout probability
+  netem_profiles:
+    metro_hospital:
+      latency_ms: 5.0          # Metro low latency
+      jitter_ms: 1.0           # Jitter
+      loss_pct: 0.0            # Packet loss percentage
+    district_hospital:
+      latency_ms: 120.0        # District high latency
+      jitter_ms: 35.0          # Jitter
+      loss_pct: 2.0            # Packet loss percentage
