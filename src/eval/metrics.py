@@ -120,14 +120,30 @@ def evaluate_predictions(
         breast_df["prob_1"].to_numpy(),
         breast_df["prob_2"].to_numpy(),
     ])
-    preds = np.argmax(probs, axis=1)
-
     available_classes = sorted(np.unique(y_true))
     metrics: Dict[str, Any] = {
         "n_breasts": int(len(breast_df)),
         "n_patients": int(breast_df["patient_hash"].nunique()),
         "available_classes": [int(c) for c in available_classes],
     }
+
+    # Restrict decision rule argmax to available classes for the site
+    if len(available_classes) == 2:
+        avail_probs = probs[:, available_classes]
+        preds = np.array([available_classes[i] for i in np.argmax(avail_probs, axis=1)])
+    else:
+        preds = np.argmax(probs, axis=1)
+
+    # Compute per-class One-vs-Rest AUCs
+    for c in available_classes:
+        y_c = (y_true == c).astype(int)
+        if len(np.unique(y_c)) > 1:
+            try:
+                metrics[f"auc_class_{c}_vs_rest"] = float(roc_auc_score(y_c, probs[:, c]))
+            except ValueError:
+                metrics[f"auc_class_{c}_vs_rest"] = 0.5
+        else:
+            metrics[f"auc_class_{c}_vs_rest"] = 0.5
 
     # Macro OvR AUC over available classes
     if len(available_classes) == 2:

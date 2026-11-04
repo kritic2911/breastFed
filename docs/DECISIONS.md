@@ -111,6 +111,23 @@ Every entry is immutable once signed off; deviations and waivers must be logged 
 - **Decision**: Lock constant backbone learning rate `backbone_lr = 1e-4` (head LR `1e-3` via 10× multiplier) with zero schedule restarts for all Federated Learning simulation experiments (FedAvg, FedProx, FedBN, and Experiment E6).
 - **Rationale**: While centralized continuous training stabilized at 3e-4 with cosine decay, multi-client federated training with distributed client models exhibits severe gradient shock and client-drift instability at 3e-4 across rounds. As observed in prior empirical attempts and specified in `AGENTS.md` Section 2.3, a constant LR of 1e-4 eliminates LR spikes and flat prediction collapse across federated communication rounds.
 
+---
+
+### D-009: Promotion of Per-Family Heads Architecture and Multi-Scanner Aggregation
+- **Date**: 2026-11-03 (Day 2, Phase P3)
+- **Status**: Accepted & Promoted from Stretch to Core P3 Variant
+- **Motivation**: Confusion matrix analysis on 3 seeds of FedAvg (Sample-Weighted) revealed severe decision rule collapse on `birads` sites: VinDr and INbreast predicted ~82% of all test breasts as class 0 (normal), suppressing class 1 recall to 0.00–0.13. Analysis showed that while INbreast retained strong ranking signal (Class 1 OvR AUC $0.7998 \pm 0.0279$), VinDr Class 1 OvR AUC dropped to $0.5815 \pm 0.0384$. This semantic collision arises because CMMD/CDD define class 1 as biopsy-confirmed focal benign lesions, while VinDr defines class 1 as unbiopsied BI-RADS 2–3 (often diffuse or negative-appearing findings). Under a single shared head, gradient interference forces class 1 to conflict with class 0.
+- **Architectural Specification (`MammographyPerFamilyResNet18`)**:
+  - Shared feature backbone (ResNet-18 conv1 through layer4, adaptive avg pool).
+  - Dedicated classification heads: `heads.birads` ($512 \to 3$) and `heads.biopsy` ($512 \to 3$).
+- **Aggregation Mechanics (`aggregate_per_family_heads`)**:
+  - Backbone weights ($\theta_{\text{backbone}}$) and BatchNorm statistics are averaged across **all K clients** to maximize feature transfer and domain generalization.
+  - `heads.birads` parameters are averaged **only** across `birads` clients (`vindr`, `inbreast`).
+  - `heads.biopsy` parameters are averaged **only** across `biopsy` clients (`cmmd`, `cdd`).
+- **Decision Rule & Metric Reporting**:
+  - Argmax is restricted to the site's `available_classes` (e.g. CMMD masks class 0).
+  - Report per-class One-vs-Rest AUCs (class 0, 1, 2) alongside macro-AUC to evaluate true ranking capability independent of threshold shifts.
+
 
 
 

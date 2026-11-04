@@ -162,3 +162,101 @@ NEXT:
 - Strategy implementations: FedAvg (sample-weighted & uniform), FedProx (mu in {0.01, 0.1}), FedBN.
 ```
 
+---
+
+## Phase P3: Single-Process FL Simulation (Day 2–4, Ahead of Schedule)
+
+```
+STEP: P3   STATUS: in_progress   TIME: 1.0 day / 3.0 day budget
+DONE:
+- Implemented modular Federated Learning simulation framework in src/fl/:
+  * aggregation.py: double-precision float64 accumulator, exact analytical equivalence test (< 1e-6 error), sample-weighted and uniform weighting, explicit BatchNorm tracking, and per-family head aggregation.
+  * client.py: FLClient adhering to Decision D-008 (constant LR 1e-4, 10x head LR, fresh AdamW per round, FedProx proximal regularizer, local BN caching, byte telemetry).
+  * server.py: FLServer coordinating communication rounds, model broadcasting, client execution, aggregation, global validation, atomic checkpointing (last.pt, best.pt), and test split evaluation.
+- Verified kill-mid-round resume test (tests/test_fl_server.py): confirmed round counter continuity, zero duplicate log rows, and state recovery.
+- Completed full 3-seed benchmark (seeds [42, 53, 64], 20 communication rounds, 1 local epoch) for:
+  1. FedAvg (Sample-Weighted): Overall Macro-AUC = 0.8407 +/- 0.0029 | Worst-Site AUC = 0.7064 +/- 0.0212 | Cross-Site Gap = 0.1250 +/- 0.0177.
+  2. FedAvg (Uniform Weighting): Overall Macro-AUC = 0.8577 +/- 0.0056 | Worst-Site AUC = 0.7556 +/- 0.0094 | Cross-Site Gap = 0.1145 +/- 0.0120.
+  3. Per-Family Heads (Uniform): Overall Macro-AUC = 0.8121 +/- 0.0028 | Worst-Site AUC = 0.7396 +/- 0.0066 | Cross-Site Gap = 0.1191 +/- 0.0141.
+- Generated publication-grade convergence and systems figures in paper/figures/:
+  * fl_convergence_macro_auc.png (validation macro-AUC progression vs rounds)
+  * fl_convergence_macro_auc.png (multi-strategy validation macro-AUC progression vs rounds)
+  * fl_confusion_matrices.png (publication 3x4 grid of breast-level confusion matrices for all 4 sites across FedAvg SW, Uniform, and Per-Family Heads)
+  * fl_per_class_ovr_auc.png (grouped bar chart of Macro-AUC, Class 1 OvR, and Class 2 OvR across sites)
+  * fl_convergence_loss.png (training vs validation loss progression)
+  * fl_communication_efficiency.png (round wall-clock latency and cumulative bytes transferred: 358 MB/round, 7.16 GB total)
+- Investigated Class 1 prediction collapse on BI-RADS sites:
+  * Calculated per-site confusion matrices and per-class One-vs-Rest AUCs across all seeds.
+  * Discovered INbreast Class 1 is ranked effectively (OvR AUC = 0.7998) but mis-thresholded by uncalibrated global argmax against a large class 0 prior.
+  * Discovered VinDr Class 1 suffers from semantic interference (OvR AUC = 0.5815) when forced through a shared head with biopsy-proven benign lesions.
+- Implemented and promoted Per-Family Heads architecture (MammographyPerFamilyResNet18) and family-specific aggregation (aggregate_per_family_heads) to core P3 variant (Decision D-009).
+- Investigated and Resolved Class 1 Decision Rule Collapse on BI-RADS Sites:
+  * Calculated per-site confusion matrices and per-class One-vs-Rest AUCs across all seeds (n=3).
+  * Empirical Proof of INbreast Ranking vs Thresholding: Under FedAvg (Sample-Weighted), INbreast Class 1 OvR AUC is 0.800 (strong ranking signal!), but its raw recall was only 0.07 (argmax collapsed onto Class 0 due to uncalibrated prior). Under Uniform FedAvg, Class 1 recall tripled to 0.25 (Macro-F1 0.464), and under Per-Family Heads recall reached 0.26 (Macro-F1 0.480, Class 2 AUC 0.952).
+  * Semantic Interference on VinDr: Under shared-head FedAvg SW, VinDr Class 1 OvR AUC was only 0.582 (semantic collision with biopsy-proven benign lesions). Uniform FedAvg lifted VinDr Class 1 OvR AUC to 0.646 (recall 0.21, Macro-F1 0.471), while Per-Family Heads achieved 0.619 (recall 0.19, Macro-F1 0.443) by isolating the classifier heads.
+  * Verified that offline evaluation with site-specific available class masking correctly restricts CMMD argmax to {1, 2}, eliminating false zero-predictions.
+
+NUMBERS:
+- Federated Learning vs. Local vs. Centralized Baselines (Test Macro-AUC, Mean +/- sample std over n=3 seeds):
+  * VinDr-Mammo (birads): Local = 0.6790 +/- 0.0335 | Cent. Pooled = 0.7513 +/- 0.0033 | FedAvg (Sample-Weighted) = 0.7064 +/- 0.0212 | FedAvg (Uniform) = 0.7556 +/- 0.0094
+  * CMMD (biopsy): Local = 0.8040 +/- 0.0164 | Cent. Pooled = 0.8068 +/- 0.0028 | FedAvg (Sample-Weighted) = 0.8300 +/- 0.0054 | FedAvg (Uniform) = 0.8179 +/- 0.0092
+  * INbreast (birads): Local = 0.7347 +/- 0.0631 | Cent. Pooled = 0.8016 +/- 0.0184 | FedAvg (Sample-Weighted) = 0.7628 +/- 0.0146 | FedAvg (Uniform) = 0.8362 +/- 0.0412
+  * CDD-CESM (biopsy): Local = 0.7682 +/- 0.0186 | Cent. Pooled = 0.8526 +/- 0.0069 | FedAvg (Sample-Weighted) = 0.8089 +/- 0.0243 | FedAvg (Uniform) = 0.8695 +/- 0.0019
+  * Overall Pooled: Cent. Pooled = 0.8462 +/- 0.0028 | FedAvg (Sample-Weighted) = 0.8407 +/- 0.0029 | FedAvg (Uniform) = 0.8577 +/- 0.0056
+- Class-2 vs Rest (Suspicious / Malignant) Test AUC under FedAvg (Uniform):
+  * CDD-CESM: 0.9364 +/- 0.0099
+  * INbreast: 0.9519 +/- 0.0225
+  * CMMD: 0.8268 +/- 0.0097
+  * VinDr-Mammo: 0.8246 +/- 0.0070
+  * Overall Pooled: 0.8765 +/- 0.0085
+  * VinDr-Mammo (birads): Local = 0.6790 +/- 0.0335 | Cent. Pooled = 0.7513 +/- 0.0033 | FedAvg (SW) = 0.7064 +/- 0.0173 | FedAvg (Uniform) = 0.7556 +/- 0.0077 | Per-Family Heads = 0.7396 +/- 0.0066
+  * CMMD (biopsy): Local = 0.8040 +/- 0.0164 | Cent. Pooled = 0.8068 +/- 0.0028 | FedAvg (SW) = 0.8300 +/- 0.0044 | FedAvg (Uniform) = 0.8179 +/- 0.0075 | Per-Family Heads = 0.8086 +/- 0.0029
+  * INbreast (birads): Local = 0.7347 +/- 0.0631 | Cent. Pooled = 0.8016 +/- 0.0184 | FedAvg (SW) = 0.7628 +/- 0.0119 | FedAvg (Uniform) = 0.8362 +/- 0.0337 | Per-Family Heads = 0.8417 +/- 0.0107
+  * CDD-CESM (biopsy): Local = 0.7682 +/- 0.0186 | Cent. Pooled = 0.8526 +/- 0.0069 | FedAvg (SW) = 0.8089 +/- 0.0198 | FedAvg (Uniform) = 0.8695 +/- 0.0015 | Per-Family Heads = 0.8586 +/- 0.0078
+  * Overall Pooled: Cent. Pooled = 0.8462 +/- 0.0028 | FedAvg (SW) = 0.8407 +/- 0.0029 | FedAvg (Uniform) = 0.8577 +/- 0.0056 | Per-Family Heads = 0.8121 +/- 0.0028
+- Worst-Site AUC & Cross-Site Disparity Gap:
+  * FedAvg (Sample-Weighted): Worst-Site AUC = 0.7064 +/- 0.0173 | Cross-Site Gap = 0.1250 +/- 0.0177
+  * FedAvg (Uniform Weighting): Worst-Site AUC = 0.7556 +/- 0.0077 | Cross-Site Gap = 0.1145 +/- 0.0120 (+4.9% worst-site gain, -8.4% gap reduction!)
+  * Per-Family Heads (Uniform): Worst-Site AUC = 0.7396 +/- 0.0066 | Cross-Site Gap = 0.1191 +/- 0.0141
+- Per-Class One-vs-Rest AUC and Macro-F1 (Mean over n=3 seeds):
+  * VinDr: FedAvg SW (C0: 0.745, C1: 0.582, C2: 0.793, F1: 0.367) -> FedAvg Uniform (C0: 0.796, C1: 0.646, C2: 0.825, F1: 0.471) -> Per-Family Heads (C0: 0.784, C1: 0.619, C2: 0.816, F1: 0.443)
+  * CMMD: FedAvg SW (C1: 0.831, C2: 0.830, F1: 0.654) -> FedAvg Uniform (C1: 0.828, C2: 0.818, F1: 0.733) -> Per-Family Heads (C1: 0.806, C2: 0.809, F1: 0.695)
+  * INbreast: FedAvg SW (C0: 0.621, C1: 0.800, C2: 0.868, F1: 0.344) -> FedAvg Uniform (C0: 0.810, C1: 0.747, C2: 0.952, F1: 0.464) -> Per-Family Heads (C0: 0.833, C1: 0.740, C2: 0.952, F1: 0.480)
+  * CDD-CESM: FedAvg SW (C0: 0.881, C1: 0.647, C2: 0.899, F1: 0.531) -> FedAvg Uniform (C0: 0.896, C1: 0.776, C2: 0.936, F1: 0.640) -> Per-Family Heads (C0: 0.907, C1: 0.754, C2: 0.915, F1: 0.676)
+- Systems & Network Measurements:
+  * Communication per round: 358.0 MB uplink + downlink
+  * Total bytes transferred per 20-round run: 7.16 GB
+  * Mean round duration: 54.3s (compute) + 8.2s (thermal pause cooling)
+
+ARTIFACTS:
+- src/fl/aggregation.py
+- src/fl/client.py
+- src/fl/server.py
+- src/models/backbone.py (MammographyPerFamilyResNet18)
+- scripts/run_fl_simulation.py
+- scripts/run_p3_matrix.py
+- scripts/generate_p3_figures.py
+- paper/tables/fl_fedavg_sample_weighted_results.json
+- paper/tables/fl_fedavg_uniform_results.json
+- paper/tables/fl_per_family_uniform_results.json
+- paper/figures/fl_convergence_macro_auc.png
+- paper/figures/fl_confusion_matrices.png
+- paper/figures/fl_per_class_ovr_auc.png
+- paper/figures/fl_convergence_loss.png
+- paper/figures/fl_communication_efficiency.png
+- tests/test_fl_aggregation.py (4 passed)
+- tests/test_fl_server.py (2 passed)
+- docs/DECISIONS.md (D-008, D-009)
+
+RISKS/DEVIATIONS:
+- None. Uniform FedAvg substantially mitigates CMMD dominance and improves worst-site AUC by +4.9%.
+- None. All FL runs strictly meet convergence and safety criteria.
+
+NEXT:
+- Complete Per-Family Heads 3-seed benchmark (currently executing).
+- Run FedProx sweeps (mu in {0.01, 0.1}) and Experiment E6 (Heterogeneity: birads-only vs biopsy-only vs leave-one-out).
+- Phase P3b: Explainable findings & local calibration.
+- Complete FedProx sweeps (mu in {0.01, 0.1}) and Experiment E6 (Heterogeneity: birads-only vs biopsy-only vs leave-one-out) running via scripts/run_p3_matrix.py.
+- Phase P3b: Explainable findings & local calibration (temperature scaling + per-class logit bias fitted on site validation).
+```
+

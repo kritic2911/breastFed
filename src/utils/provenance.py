@@ -103,12 +103,18 @@ class RunLogger:
         cfg: dict[str, Any],
         results_root: Path = Path("results"),
         run_id: str | None = None,
+        run_dir: Path | None = None,
         thermal_telemetry: bool = True,
     ):
         self.cfg = cfg
-        self.results_root = Path(results_root)
-        self.run_id = run_id or generate_run_id(cfg)
-        self.run_dir = self.results_root / "runs" / self.run_id
+        if run_dir is not None:
+            self.run_dir = Path(run_dir)
+            self.run_id = run_id or self.run_dir.name
+            self.results_root = self.run_dir.parent.parent if self.run_dir.parent.name == "runs" else self.run_dir.parent
+        else:
+            self.results_root = Path(results_root)
+            self.run_id = run_id or generate_run_id(cfg)
+            self.run_dir = self.results_root / "runs" / self.run_id
 
         # Subdirectories
         self.preds_dir = self.run_dir / "preds"

@@ -139,11 +139,73 @@ class MammographyResNet18(nn.Module):
         ]
 
 
+class MammographyPerFamilyResNet18(MammographyResNet18):
+    """ResNet-18 with separate classification heads per label family (birads vs biopsy).
+
+    Adheres to AGENTS.md Section 1.5 (Per-family heads variant):
+      - Shared backbone features (conv1 to layer4).
+      - Dedicated heads: 'birads' for screening/diagnostic BI-RADS sites (VinDr, INbreast).
+      - Dedicated heads: 'biopsy' for pathology-confirmed sites (CMMD, CDD).
+    """
+
+    def __init__(
+        self,
+        num_classes: int = 3,
+        pretrained: bool = True,
+        bn_mode: Literal["frozen", "trainable"] = "trainable",
+    ):
+        super().__init__(num_classes=num_classes, pretrained=pretrained, bn_mode=bn_mode)
+        # Replace single fc with per-family heads ModuleDict
+        self.heads = nn.ModuleDict({
+            "birads": nn.Linear(512, num_classes),
+            "biopsy": nn.Linear(512, num_classes),
+        })
+        delattr(self, "fc")
+
+    def forward(self, x: torch.Tensor, family: str = "birads") -> torch.Tensor:
+        """Forward pass through shared backbone followed by family-specific head."""
+        if x.dim() == 3:
+            x = x.unsqueeze(1)
+        if x.shape[1] == 1:
+            x = x.repeat(1, 3, 1, 1)
+
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.avgpool(x)
+        features = torch.flatten(x, 1)
+        return self.heads[family](features)
+
+    def get_parameter_groups_for_family(
+        self, family: str, backbone_lr: float, head_lr_multiplier: float = 10.0
+    ) -> List[Dict[str, any]]:
+        """Get parameter groups fine-tuning backbone + active family head."""
+        head_params = list(self.heads[family].parameters())
+        backbone_params = [
+            p for p in list(self.layer3.parameters()) + list(self.layer4.parameters())
+            if p.requires_grad
+        ]
+        return [
+            {"params": backbone_params, "lr": backbone_lr, "name": "backbone"},
+            {"params": head_params, "lr": backbone_lr * head_lr_multiplier, "name": f"head_{family}"},
+        ]
+
+
 def build_model(
     num_classes: int = 3,
     pretrained: bool = True,
     bn_mode: Literal["frozen", "trainable"] = "frozen",
-) -> MammographyResNet18:
-    """Build MammographyResNet18 model."""
+    per_family_heads: bool = False,
+) -> nn.Module:
+    """Build MammographyResNet18 or MammographyPerFamilyResNet18."""
+    if per_family_heads:
+        return MammographyPerFamilyResNet18(num_classes=num_classes, pretrained=pretrained, bn_mode=bn_mode)
     return MammographyResNet18(num_classes=num_classes, pretrained=pretrained, bn_mode=bn_mode)
 

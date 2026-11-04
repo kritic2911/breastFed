@@ -1,0 +1,273 @@
+[
+  {
+    "run_id": "20261104_110915-b474d01b-e899c89",
+    "experiment_id": "fl_e6_biopsy_only",
+    "strategy": "fedavg",
+    "aggregation_mode": "uniform",
+    "seed": 42,
+    "best_round": 9,
+    "total_bytes_transferred": 3580061120,
+    "overall_macro_auc": 0.8414599539300275,
+    "worst_site_auc": 0.6966945327396431,
+    "cross_site_gap": 0.12293991652443581,
+    "overall_metrics": {
+      "n_breasts": 657,
+      "n_patients": 497,
+      "available_classes": [
+        0,
+        1,
+        2
+      ],
+      "auc_class_0_vs_rest": 0.9077434193713263,
+      "auc_class_1_vs_rest": 0.7586622046280046,
+      "auc_class_2_vs_rest": 0.8579742377907517,
+      "macro_auc": 0.8414599539300275,
+      "sens_at_90_spec": 0.6393939393939394,
+      "threshold_90_spec": 0.38721364736557007,
+      "macro_f1": 0.6275224028787196,
+      "macro_precision": 0.6284508853863274,
+      "macro_recall": 0.6931096906143693,
+      "macro_sensitivity": 0.6931096906143693,
+      "macro_specificity": 0.831346969205911,
+      "precision_class_0": 0.43842364532019706,
+      "recall_class_0": 0.9081632653061225,
+      "sensitivity_class_0": 0.9081632653061225,
+      "specificity_class_0": 0.7960644007155635,
+      "precision_class_1": 0.569377990430622,
+      "recall_class_1": 0.519650655021834,
+      "sensitivity_class_1": 0.519650655021834,
+      "specificity_class_1": 0.7897196261682243,
+      "precision_class_2": 0.8775510204081632,
+      "recall_class_2": 0.6515151515151515,
+      "sensitivity_class_2": 0.6515151515151515,
+      "specificity_class_2": 0.908256880733945,
+      "ece": 0.0950926677004932
+    },
+    "per_site_metrics": {
+      "vindr": {
+        "n_breasts": 152,
+        "n_patients": 76,
+        "available_classes": [
+          0,
+          1,
+          2
+        ],
+        "auc_class_0_vs_rest": 0.7020011888250447,
+        "auc_class_1_vs_rest": 0.6101603314718069,
+        "auc_class_2_vs_rest": 0.7779220779220779,
+        "macro_auc": 0.6966945327396431,
+        "sens_at_90_spec": 0.4523809523809524,
+        "threshold_90_spec": 0.28999063372612,
+        "macro_f1": 0.4414555088047374,
+        "macro_precision": 0.5299371872671138,
+        "macro_recall": 0.47198988885171556,
+        "macro_sensitivity": 0.47198988885171556,
+        "macro_specificity": 0.7290353659285698,
+        "precision_class_0": 0.40594059405940597,
+        "recall_class_0": 0.8367346938775511,
+        "sensitivity_class_0": 0.8367346938775511,
+        "specificity_class_0": 0.4174757281553398,
+        "precision_class_1": 0.4838709677419355,
+        "recall_class_1": 0.2459016393442623,
+        "sensitivity_class_1": 0.2459016393442623,
+        "specificity_class_1": 0.8241758241758241,
+        "precision_class_2": 0.7,
+        "recall_class_2": 0.3333333333333333,
+        "sensitivity_class_2": 0.3333333333333333,
+        "specificity_class_2": 0.9454545454545454,
+        "ece": 0.0319891626897611
+      },
+      "cmmd": {
+        "n_breasts": 354,
+        "n_patients": 335,
+        "available_classes": [
+          1,
+          2
+        ],
+        "auc_class_1_vs_rest": 0.8210432654877099,
+        "auc_class_2_vs_rest": 0.8196344492640789,
+        "macro_auc": 0.8196344492640789,
+        "sens_at_90_spec": 0.5925925925925926,
+        "threshold_90_spec": 0.5201494097709656,
+        "macro_f1": 0.730171626726528,
+        "macro_precision": 0.7322481415021789,
+        "macro_recall": 0.7687131576020465,
+        "macro_sensitivity": 0.7687131576020465,
+        "macro_specificity": 0.7687131576020465,
+        "precision_class_1": 0.5602409638554217,
+        "recall_class_1": 0.8378378378378378,
+        "sensitivity_class_1": 0.8378378378378378,
+        "specificity_class_1": 0.6995884773662552,
+        "precision_class_2": 0.9042553191489362,
+        "recall_class_2": 0.6995884773662552,
+        "sensitivity_class_2": 0.6995884773662552,
+        "specificity_class_2": 0.8378378378378378,
+        "ece": 0.12444327182352205
+      },
+      "inbreast": {
+        "n_breasts": 39,
+        "n_patients": 22,
+        "available_classes": [
+          0,
+          1,
+          2
+        ],
+        "auc_class_0_vs_rest": 0.7053571428571428,
+        "auc_class_1_vs_rest": 0.7989130434782609,
+        "auc_class_2_vs_rest": 0.8888888888888888,
+        "macro_auc": 0.7977196917414308,
+        "sens_at_90_spec": 0.6666666666666666,
+        "threshold_90_spec": 0.23799574375152588,
+        "macro_f1": 0.5740740740740741,
+        "macro_precision": 0.6598290598290598,
+        "macro_recall": 0.6303197607545433,
+        "macro_sensitivity": 0.6303197607545433,
+        "macro_specificity": 0.8013888888888889,
+        "precision_class_0": 0.3,
+        "recall_class_0": 0.8571428571428571,
+        "sensitivity_class_0": 0.8571428571428571,
+        "specificity_class_0": 0.5625,
+        "precision_class_1": 0.8461538461538461,
+        "recall_class_1": 0.4782608695652174,
+        "sensitivity_class_1": 0.4782608695652174,
+        "specificity_class_1": 0.875,
+        "precision_class_2": 0.8333333333333334,
+        "recall_class_2": 0.5555555555555556,
+        "sensitivity_class_2": 0.5555555555555556,
+        "specificity_class_2": 0.9666666666666667,
+        "ece": 0.11884967333231217
+      },
+      "cdd": {
+        "n_breasts": 112,
+        "n_patients": 64,
+        "available_classes": [
+          0,
+          1,
+          2
+        ],
+        "auc_class_0_vs_rest": 0.8387755102040817,
+        "auc_class_1_vs_rest": 0.6451734539969833,
+        "auc_class_2_vs_rest": 0.8980263157894737,
+        "macro_auc": 0.7939917599968463,
+        "sens_at_90_spec": 0.8333333333333334,
+        "threshold_90_spec": 0.30680471658706665,
+        "macro_f1": 0.6137064116636589,
+        "macro_precision": 0.762987012987013,
+        "macro_recall": 0.6514161220043574,
+        "macro_sensitivity": 0.6514161220043574,
+        "macro_specificity": 0.8309395283079494,
+        "precision_class_0": 0.5833333333333334,
+        "recall_class_0": 1.0,
+        "sensitivity_class_0": 1.0,
+        "specificity_class_0": 0.5714285714285714,
+        "precision_class_1": 0.8571428571428571,
+        "recall_class_1": 0.17647058823529413,
+        "sensitivity_class_1": 0.17647058823529413,
+        "specificity_class_1": 0.9871794871794872,
+        "precision_class_2": 0.8484848484848485,
+        "recall_class_2": 0.7777777777777778,
+        "sensitivity_class_2": 0.7777777777777778,
+        "specificity_class_2": 0.9342105263157895,
+        "ece": 0.13520036957093645
+      }
+    },
+    "per_family_metrics": {
+      "biopsy": {
+        "n_breasts": 466,
+        "n_patients": 399,
+        "available_classes": [
+          0,
+          1,
+          2
+        ],
+        "auc_class_0_vs_rest": 0.9717542677448338,
+        "auc_class_1_vs_rest": 0.7954022988505747,
+        "auc_class_2_vs_rest": 0.8612117378720794,
+        "macro_auc": 0.8761227681558292,
+        "sens_at_90_spec": 0.6272401433691757,
+        "threshold_90_spec": 0.4643257260322571,
+        "macro_f1": 0.6881893164054066,
+        "macro_precision": 0.6569362181791182,
+        "macro_recall": 0.7812960903061015,
+        "macro_sensitivity": 0.7812960903061015,
+        "macro_specificity": 0.8527888865105041,
+        "precision_class_0": 0.5121951219512195,
+        "recall_class_0": 1.0,
+        "sensitivity_class_0": 1.0,
+        "specificity_class_0": 0.9056603773584906,
+        "precision_class_1": 0.5636363636363636,
+        "recall_class_1": 0.6413793103448275,
+        "sensitivity_class_1": 0.6413793103448275,
+        "specificity_class_1": 0.7757009345794392,
+        "precision_class_2": 0.8949771689497716,
+        "recall_class_2": 0.7025089605734767,
+        "sensitivity_class_2": 0.7025089605734767,
+        "specificity_class_2": 0.8770053475935828,
+        "ece": 0.12654279709629748
+      },
+      "birads": {
+        "n_breasts": 191,
+        "n_patients": 98,
+        "available_classes": [
+          0,
+          1,
+          2
+        ],
+        "auc_class_0_vs_rest": 0.7119047619047619,
+        "auc_class_1_vs_rest": 0.662772585669782,
+        "auc_class_2_vs_rest": 0.7983193277310925,
+        "macro_auc": 0.7243322251018789,
+        "sens_at_90_spec": 0.49019607843137253,
+        "threshold_90_spec": 0.28999063372612,
+        "macro_f1": 0.476943313278059,
+        "macro_precision": 0.5700360245814791,
+        "macro_recall": 0.5071195144724556,
+        "macro_sensitivity": 0.5071195144724556,
+        "macro_specificity": 0.7445425175954771,
+        "precision_class_0": 0.3884297520661157,
+        "recall_class_0": 0.8392857142857143,
+        "sensitivity_class_0": 0.8392857142857143,
+        "specificity_class_0": 0.45185185185185184,
+        "precision_class_1": 0.5909090909090909,
+        "recall_class_1": 0.30952380952380953,
+        "sensitivity_class_1": 0.30952380952380953,
+        "specificity_class_1": 0.8317757009345794,
+        "precision_class_2": 0.7307692307692307,
+        "recall_class_2": 0.37254901960784315,
+        "sensitivity_class_2": 0.37254901960784315,
+        "specificity_class_2": 0.95,
+        "ece": 0.0351347015166158
+      }
+    },
+    "test_ci": {
+      "macro_auc_ci": [
+        0.8185437529109888,
+        0.8645535495378802
+      ],
+      "class_2_auc_ci": [
+        0.8288764765021953,
+        0.8845210166643331
+      ],
+      "macro_f1_ci": [
+        0.5901663431072778,
+        0.6638920824386354
+      ],
+      "macro_precision_ci": [
+        0.5964697674540901,
+        0.6617773697267443
+      ],
+      "macro_sensitivity_ci": [
+        0.6572919213523358,
+        0.7267244021483874
+      ],
+      "macro_recall_ci": [
+        0.6572919213523358,
+        0.7267244021483874
+      ],
+      "macro_specificity_ci": [
+        0.8132700738765836,
+        0.8488408819194705
+      ]
+    }
+  }
+]

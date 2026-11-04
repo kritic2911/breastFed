@@ -1,10 +1,13 @@
 """Reproducible seeding utilities."""
 
+import logging
 import os
 import random
 
 import numpy as np
 import torch
+
+logger = logging.getLogger(__name__)
 
 
 def set_seed(seed: int = 42, deterministic: bool = True) -> None:
@@ -42,6 +45,17 @@ def set_rng_states(states: dict) -> None:
     if "numpy" in states:
         np.random.set_state(states["numpy"])
     if "torch" in states:
-        torch.set_rng_state(states["torch"])
+        torch_state = states["torch"]
+        if isinstance(torch_state, torch.Tensor):
+            torch_state = torch_state.cpu().to(torch.uint8)
+        torch.set_rng_state(torch_state)
     if "cuda" in states and torch.cuda.is_available():
-        torch.cuda.set_rng_state_all(states["cuda"])
+        cuda_states = states["cuda"]
+        if isinstance(cuda_states, (list, tuple)):
+            cuda_states = [s.cpu().to(torch.uint8) if isinstance(s, torch.Tensor) else s for s in cuda_states]
+        elif isinstance(cuda_states, torch.Tensor):
+            cuda_states = cuda_states.cpu().to(torch.uint8)
+        try:
+            torch.cuda.set_rng_state_all(cuda_states)
+        except Exception as e:
+            logger.debug("Failed restoring CUDA RNG state: %s", e)

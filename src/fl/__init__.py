@@ -6,3 +6,4 @@ Implements cross-silo FL across heterogeneous digital mammography hospitals:
   - FedBN (local batch normalization parameters)
   - Systems metrics: byte counters, latency, atomic checkpointing
 """
+
